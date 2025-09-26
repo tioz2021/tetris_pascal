@@ -536,17 +536,11 @@ begin
                 begin
                     {11}
                     if f1.position.curX > gs.area.cord.a.x+2 then
-                    begin
                         xMove := xMove-1
-                    end
                 end;
                 -77: { right }
                 begin
-                    if f1.position.curX < 
-                        gs.area.cord.b.x - f1.size.width-1 then 
-                    begin
-                        xMove := xMove+1
-                    end
+                    xMove := xMove+1
                 end;
                 32: 
                 begin
