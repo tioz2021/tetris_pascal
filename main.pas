@@ -16,7 +16,7 @@ type
         borderChar: char;
         borderTop, borderBottom, borderLeft, borderRight: integer;
     end;
-    gameSettings = record
+    gameSettings_t = record
         { base }
         speed: integer;
         lvl: integer;
@@ -43,14 +43,14 @@ procedure ClearArea(x, y, countX, countY: integer);
 var
     i, j: integer;
 begin
-    GotoXY(x, y);
+    GotoXY(x+1, y);
 
     for i := 1 to countY do
     begin
         for j := 1 to countX do
         begin
             write(' ');
-            GotoXY(x+j, y+i); 
+            GotoXY(x+j, y+i-1); 
         end;
     end
 end;
@@ -68,7 +68,7 @@ begin
         for j := 1 to figure.size.width do
         begin
             GotoXY(figure.position.curX, figure.position.curY);
-            figure.position.curX := figure.position.curX + 1;
+            figure.position.curX := figure.position.curX+1;
 
             case figure.ftype of
                 1:
@@ -245,9 +245,9 @@ begin
                 end
             end
         end;
-        GotoXY(1, 1);
         figure.position.curX := figure.position.x;
-        figure.position.curY := figure.position.curY + 1
+        figure.position.curY := figure.position.curY+1;
+        GotoXY(1, 1);
     end;
 end;
 
@@ -378,7 +378,7 @@ begin
     figure.position.cury := y
 end;
 
-procedure WritePlayArea(gs: gameSettings);
+procedure WritePlayArea(gs: gameSettings_t);
 var
     startPosX, startPosY: integer;
     i, j: integer;
@@ -412,9 +412,9 @@ begin
     write('area');
 end;
 
-procedure InitPlayArea(var gs: gameSettings);
+procedure InitPlayArea(var gs: gameSettings_t);
 begin
-    gs.area.width := 22;
+    gs.area.width := 36;
     gs.area.height := 34;
     gs.area.borderTop := 2;
     gs.area.borderLeft := 10;
@@ -426,16 +426,20 @@ var
     keyCode: integer;
     i: integer;
     f1: figure_t;
-    gs: gameSettings;
+    gs: gameSettings_t;
 begin
     { init param }
     clrscr;
     saveTextAttr := TextAttr;
-    i := 0;
-    f1.ftype := 0;
+    i := 1;
+    f1.ftype := 17;
 
     { game area param }
     InitPlayArea(gs);
+
+    FigureInit(f1, f1.ftype);
+    FigureSetPosition(f1, gs.area.borderLeft+1, 
+        gs.area.borderTop+1);
 
     { main game cycle }
     while true do
@@ -443,29 +447,40 @@ begin
         if KeyPressed then
         begin
             GetKey(keyCode);
+
             case keyCode of
+                -72: { up }
+                begin
+                    i := i-1;
+                end;
+                -80: { down }
+                begin
+                    i := i+1;
+                end;
                 -75: { left }
                 begin
                     f1.ftype := f1.ftype-1;
+
                     GotoXY(1, 1);
-                    ClearArea(gs.area.borderLeft, gs.area.borderTop,
+                    ClearArea(gs.area.borderLeft, gs.area.borderTop+i,
                         12, 12);
 
                     FigureInit(f1, f1.ftype);
                     FigureSetPosition(f1, gs.area.borderLeft+1, 
-                        gs.area.borderTop+1);
+                        gs.area.borderTop+1+i);
                     FigureWrite(f1);
                 end;
                 -77: { right }
                 begin
                     f1.ftype := f1.ftype+1;
+
                     GotoXY(1, 1);
-                    ClearArea(gs.area.borderLeft, gs.area.borderTop,
+                    ClearArea(gs.area.borderLeft, gs.area.borderTop+i,
                         12, 12);
 
                     FigureInit(f1, f1.ftype);
                     FigureSetPosition(f1, gs.area.borderLeft+1, 
-                        gs.area.borderTop+1);
+                        gs.area.borderTop+1+i);
                     FigureWrite(f1);
                 end;
                 32: 
@@ -485,6 +500,14 @@ begin
 
         { write area }
         WritePlayArea(gs);
+
+        { ? }
+        {
+        FigureSetPosition(f1, gs.area.borderLeft+1, 
+            gs.area.borderTop+1+i);
+        ClearArea(gs.area.borderLeft, gs.area.borderTop+i, 12, 12);
+        FigureWrite(f1);
+        }
         
         { game info }
         GotoXY(ScreenWidth-25, 1);
@@ -501,9 +524,9 @@ begin
         GotoXY(ScreenWidth-25, 7);
         write('?: ', gs.area.borderTop, '    ');
 
-        delay(100);
+        delay(1000);
         GotoXY(1, 1);
-        i := i + 1
+        {i := i+1}
     end;
 
     { exit program }
