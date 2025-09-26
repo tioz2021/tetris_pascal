@@ -1,5 +1,5 @@
 procedure:
-    ClearArea
+    FigureHide
     FigureWrite
     FigureInit
     FigureSetPosition
@@ -8,6 +8,7 @@ procedure:
     PlayAreaWrite
 
     GameStatusDebug
+    RandomizeNumber
 
 ##########################################################################
 

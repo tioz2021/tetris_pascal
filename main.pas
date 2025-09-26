@@ -39,6 +39,30 @@ type
     end;
     direction_t = (down, left, right);
 
+    qPtr = ^qRecord;
+    qRecord = record
+        data: figure_t;
+        next: qPtr;
+    end;
+    FigureQueue = record
+        first, last: qPtr;
+    end;
+
+function RandomizeNumber(n: integer): integer;
+var
+    randomNumber: integer;
+begin
+    randomNumber := random(n);
+
+    if randomNumber <> 0 then
+        RandomizeNumber := randomNumber
+    else
+    begin
+        randomNumber := random(n);
+        RandomizeNumber := randomNumber
+    end
+end;
+
 procedure FigureHide(x, y, countX, countY: integer);
 var
     i, j: integer;
@@ -422,7 +446,8 @@ begin
     gs.area.borderChar := '*'
 end;
 
-procedure GameStatusDebug(f1: figure_t; gs: gameSettings_t);
+procedure GameStatusDebug(f1: figure_t;
+    gs: gameSettings_t; gameLoopCounter: integer);
 begin
     GotoXY(ScreenWidth-25, 1);
     write('Game Info: ');
@@ -434,33 +459,28 @@ begin
     write('f1 pos curY: ', f1.position.curY, '    ');
 
     GotoXY(ScreenWidth-25, 8);
-    write('?: ', gs.area.borderTop, '    ');
+    write('GameLoopCounter: ', gameLoopCounter, '    ');
 end;
 
 var
     saveTextAttr: integer;
     keyCode: integer;
     xMove, yMove: integer;
-    f1: figure_t;
     gs: gameSettings_t;
-    randomNumber, randomPositionX: integer;
+    f1: figure_t;
+    fq: FigureQueue;
+    i: integer;
 begin
     { base }
     clrscr;
     saveTextAttr := TextAttr;
     xMove := 0;
     yMove := 0;
+    i := 0;
 
     { spawn random figure }
     randomize;
-    randomNumber := random(17);
-    if randomNumber <> 0 then
-        f1.ftype := randomNumber
-    else
-    begin
-        randomNumber := random(17);
-        f1.ftype := randomNumber
-    end;
+    f1.ftype := RandomizeNumber(figuresCount);
 
     { game area param }
     PlayAreaInit(gs);
@@ -468,8 +488,16 @@ begin
     FigureInit(f1, f1.ftype);
     FigureSetPosition(f1, gs.area.borderLeft+1, gs.area.borderTop+1);
 
+    { init FigureQueue }
+    fq.first := nil;
+    fq.last := nil;
+    new(fq.first);
+    fq.first^.data := f1;
+    fq.first^.next := nil;
+    fq.last := fq.first;
+
     { main game cycle }
-    while true do
+    while i < 15 do
     begin
         if KeyPressed then
         begin
@@ -523,45 +551,55 @@ begin
         FigureInit(f1, f1.ftype);
         FigureSetPosition(
             f1,
-            gs.area.borderLeft + 1 + xMove,     { x pos }
-            gs.area.borderTop + 1 + yMove       { y pos }
+            gs.area.borderLeft + 1 + xMove,
+            gs.area.borderTop + 1 + yMove
         );
         FigureWrite(f1);
         delay(200);
 
-        FigureHide(
-            gs.area.borderLeft + xMove,
-            gs.area.borderTop + 1 + yMove,          
-            f1.size.width,
-            f1.size.height 
-        );
-        
-        { # game info }
-        GameStatusDebug(f1, gs);
-
-        GotoXY(1, 1);
-        if f1.position.curY < 35 then
+        if f1.position.curY < gs.area.height+1 then
         begin
+            FigureHide(
+                gs.area.borderLeft + xMove,
+                gs.area.borderTop + 1 + yMove,          
+                f1.size.width,
+                f1.size.height 
+            );
             yMove := yMove+1;
         end
-        else if f1.position.curY = 35 then
+        else if f1.position.curY = gs.area.height+1 then
         begin
             yMove := 0;
 
             { spawn random figure }
-            randomPositionX := random(gs.area.width-1);
-            xMove := randomPositionX;
+            f1.ftype := RandomizeNumber(figuresCount);
+            xMove := RandomizeNumber(
+                gs.area.width - f1.size.width);
+            
+            { add f1 to queue }
+            new(fq.last^.next);
+            fq.last^.data := f1;
+            fq.last := fq.last^.next;
 
-            randomNumber := random(17);
-            if randomNumber <> 0 then
-                f1.ftype := randomNumber
-            else
-            begin
-                randomNumber := random(17);
-                f1.ftype := randomNumber
-            end
+            i := i + 1
+        end;
 
-        end
+        { # game info }
+        GameStatusDebug(f1, gs, i);
+        GotoXY(1, 1);
+    end;
+
+    clrscr;
+    GotoXY(1, 1);
+
+    { check figures }
+    while fq.first^.next <> nil do
+    begin
+        writeln('fType: ', fq.first^.data.ftype);
+        writeln('fHeight: ', fq.first^.data.size.height);
+        writeln('fWidth: ', fq.first^.data.size.width);
+        writeln;
+        fq.first := fq.first^.next
     end;
 
     { exit program }
