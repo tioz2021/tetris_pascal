@@ -1,7 +1,7 @@
 procedure:
-    FigureHide
-    FigureWrite
     FigureInit
+    FigureWrite
+    FigureHide
     FigureSetPosition
 
     PlayAreaInit

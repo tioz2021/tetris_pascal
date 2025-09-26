@@ -74,9 +74,8 @@ begin
         for j := 1 to countX do
         begin
             GotoXY(x+j, y+i-1);
-            write(' ');
-            {delay(100)}
-        end;
+            write(' ')
+        end
     end
 end;
 
@@ -268,24 +267,16 @@ begin
                             write(figureChar)
                     end
                 end
-            end;
-            {delay(100);}
+            end
         end;
         figure.position.curX := figure.position.x;
         figure.position.curY := figure.position.curY+1;
         GotoXY(1, 1)
-    end;
+    end
 end;
 
 procedure FigureInit(var figure: figure_t; figureTypeId: integer);
 begin
-    {
-    figure.position.x := 0;
-    figure.position.y := 0;
-    figure.position.curX := 0;
-    figure.position.curY := 0;
-    }
-
     case figureTypeId of
         1:
         begin
@@ -459,7 +450,7 @@ begin
     write('f1 pos curY: ', f1.position.curY, '    ');
 
     GotoXY(ScreenWidth-25, 8);
-    write('GameLoopCounter: ', gameLoopCounter, '    ');
+    write('GameLoopCounter: ', gameLoopCounter, '    ')
 end;
 
 var
@@ -469,14 +460,14 @@ var
     gs: gameSettings_t;
     f1: figure_t;
     fq: FigureQueue;
-    i: integer;
+    gameLoopCounter: integer;
 begin
     { base }
     clrscr;
     saveTextAttr := TextAttr;
     xMove := 0;
     yMove := 0;
-    i := 0;
+    gameLoopCounter := 0;
 
     { spawn random figure }
     randomize;
@@ -497,7 +488,7 @@ begin
     fq.last := fq.first;
 
     { main game cycle }
-    while i < 15 do
+    while gameLoopCounter < 15 do
     begin
         if KeyPressed then
         begin
@@ -507,27 +498,27 @@ begin
             case keyCode of
                 122: { z  change figure type - }
                 begin
-                    f1.ftype := f1.ftype-1;
+                    f1.ftype := f1.ftype-1
                 end;
                 120: { x  change figure type + }
                 begin
-                    f1.ftype := f1.ftype+1;
+                    f1.ftype := f1.ftype+1
                 end;
                 -72: { up }
                 begin
-                    yMove := yMove-1;
+                    yMove := yMove-1
                 end;
                 -80: { down }
                 begin
-                    yMove := yMove+1;
+                    yMove := yMove+1
                 end;
                 -75: { left }
                 begin
-                    xMove := xMove-1;
+                    xMove := xMove-1
                 end;
                 -77: { right }
                 begin
-                    xMove := xMove+1;
+                    xMove := xMove+1
                 end;
                 32: 
                 begin
@@ -541,7 +532,7 @@ begin
                     clrscr;
                     halt(1)
                 end
-            end;
+            end
         end;
 
         { # write area }
@@ -565,7 +556,7 @@ begin
                 f1.size.width,
                 f1.size.height 
             );
-            yMove := yMove+1;
+            yMove := yMove+1
         end
         else if f1.position.curY = gs.area.height+1 then
         begin
@@ -581,12 +572,12 @@ begin
             fq.last^.data := f1;
             fq.last := fq.last^.next;
 
-            i := i + 1
+            gameLoopCounter := gameLoopCounter+1
         end;
 
         { # game info }
-        GameStatusDebug(f1, gs, i);
-        GotoXY(1, 1);
+        GameStatusDebug(f1, gs, gameLoopCounter);
+        GotoXY(1, 1)
     end;
 
     clrscr;
