@@ -39,18 +39,19 @@ type
     end;
     direction_t = (down, left, right);
 
-procedure ClearArea(x, y, countX, countY: integer);
+procedure FigureHide(x, y, countX, countY: integer);
 var
     i, j: integer;
 begin
-    GotoXY(x+1, y);
+    GotoXY(x, y);
 
     for i := 1 to countY do
     begin
         for j := 1 to countX do
         begin
+            GotoXY(x+j, y+i-1);
             write(' ');
-            GotoXY(x+j, y+i-1); 
+            {delay(100)}
         end;
     end
 end;
@@ -243,20 +244,23 @@ begin
                             write(figureChar)
                     end
                 end
-            end
+            end;
+            {delay(100);}
         end;
         figure.position.curX := figure.position.x;
         figure.position.curY := figure.position.curY+1;
-        GotoXY(1, 1);
+        GotoXY(1, 1)
     end;
 end;
 
 procedure FigureInit(var figure: figure_t; figureTypeId: integer);
 begin
+    {
     figure.position.x := 0;
     figure.position.y := 0;
     figure.position.curX := 0;
     figure.position.curY := 0;
+    }
 
     case figureTypeId of
         1:
@@ -378,7 +382,7 @@ begin
     figure.position.cury := y
 end;
 
-procedure WritePlayArea(gs: gameSettings_t);
+procedure PlayAreaWrite(gs: gameSettings_t);
 var
     startPosX, startPosY: integer;
     i, j: integer;
@@ -405,41 +409,64 @@ begin
                 if (j = 1) or (j = gs.area.width) then
                     write(gs.area.borderChar)
             end
-        end;
-
-    end;
-    GotoXY(1, 1);
-    write('area');
+        end
+    end
 end;
 
-procedure InitPlayArea(var gs: gameSettings_t);
+procedure PlayAreaInit(var gs: gameSettings_t);
 begin
     gs.area.width := 36;
     gs.area.height := 34;
     gs.area.borderTop := 2;
     gs.area.borderLeft := 10;
-    gs.area.borderChar := '*';
+    gs.area.borderChar := '*'
+end;
+
+procedure GameStatusDebug(f1: figure_t; gs: gameSettings_t);
+begin
+    GotoXY(ScreenWidth-25, 1);
+    write('Game Info: ');
+    GotoXY(ScreenWidth-25, 2);
+    write('figure type: ', f1.ftype, '    ');
+    GotoXY(ScreenWidth-25, 3);
+    write('f1 pos curX: ', f1.position.curX, '    ');
+    GotoXY(ScreenWidth-25, 4);
+    write('f1 pos curY: ', f1.position.curY, '    ');
+
+    GotoXY(ScreenWidth-25, 8);
+    write('?: ', gs.area.borderTop, '    ');
 end;
 
 var
     saveTextAttr: integer;
     keyCode: integer;
-    i: integer;
+    xMove, yMove: integer;
     f1: figure_t;
     gs: gameSettings_t;
+    randomNumber, randomPositionX: integer;
 begin
-    { init param }
+    { base }
     clrscr;
     saveTextAttr := TextAttr;
-    i := 1;
-    f1.ftype := 17;
+    xMove := 0;
+    yMove := 0;
+
+    { spawn random figure }
+    randomize;
+    randomNumber := random(17);
+    if randomNumber <> 0 then
+        f1.ftype := randomNumber
+    else
+    begin
+        randomNumber := random(17);
+        f1.ftype := randomNumber
+    end;
 
     { game area param }
-    InitPlayArea(gs);
+    PlayAreaInit(gs);
 
     FigureInit(f1, f1.ftype);
-    FigureSetPosition(f1, gs.area.borderLeft+1, 
-        gs.area.borderTop+1);
+    FigureSetPosition(f1, gs.area.borderLeft+1, gs.area.borderTop+1);
 
     { main game cycle }
     while true do
@@ -447,41 +474,32 @@ begin
         if KeyPressed then
         begin
             GetKey(keyCode);
+            write(keyCode);
 
             case keyCode of
+                122: { z  change figure type - }
+                begin
+                    f1.ftype := f1.ftype-1;
+                end;
+                120: { x  change figure type + }
+                begin
+                    f1.ftype := f1.ftype+1;
+                end;
                 -72: { up }
                 begin
-                    i := i-1;
+                    yMove := yMove-1;
                 end;
                 -80: { down }
                 begin
-                    i := i+1;
+                    yMove := yMove+1;
                 end;
                 -75: { left }
                 begin
-                    f1.ftype := f1.ftype-1;
-
-                    GotoXY(1, 1);
-                    ClearArea(gs.area.borderLeft, gs.area.borderTop+i,
-                        12, 12);
-
-                    FigureInit(f1, f1.ftype);
-                    FigureSetPosition(f1, gs.area.borderLeft+1, 
-                        gs.area.borderTop+1+i);
-                    FigureWrite(f1);
+                    xMove := xMove-1;
                 end;
                 -77: { right }
                 begin
-                    f1.ftype := f1.ftype+1;
-
-                    GotoXY(1, 1);
-                    ClearArea(gs.area.borderLeft, gs.area.borderTop+i,
-                        12, 12);
-
-                    FigureInit(f1, f1.ftype);
-                    FigureSetPosition(f1, gs.area.borderLeft+1, 
-                        gs.area.borderTop+1+i);
-                    FigureWrite(f1);
+                    xMove := xMove+1;
                 end;
                 32: 
                 begin
@@ -498,35 +516,52 @@ begin
             end;
         end;
 
-        { write area }
-        WritePlayArea(gs);
+        { # write area }
+        PlayAreaWrite(gs);
 
-        { ? }
-        {
-        FigureSetPosition(f1, gs.area.borderLeft+1, 
-            gs.area.borderTop+1+i);
-        ClearArea(gs.area.borderLeft, gs.area.borderTop+i, 12, 12);
+        { # write }
+        FigureInit(f1, f1.ftype);
+        FigureSetPosition(
+            f1,
+            gs.area.borderLeft + 1 + xMove,     { x pos }
+            gs.area.borderTop + 1 + yMove       { y pos }
+        );
         FigureWrite(f1);
-        }
+        delay(200);
+
+        FigureHide(
+            gs.area.borderLeft + xMove,
+            gs.area.borderTop + 1 + yMove,          
+            f1.size.width,
+            f1.size.height 
+        );
         
-        { game info }
-        GotoXY(ScreenWidth-25, 1);
-        write('Game Info: ');
-        GotoXY(ScreenWidth-25, 2);
-        write('figure type: ', f1.ftype, '    ');
-        GotoXY(ScreenWidth-25, 3);
-        write('figure y: ', f1.position.y, '    ');
-        GotoXY(ScreenWidth-25, 4);
-        write('figure curY: ', f1.position.curY, '    ');
-        GotoXY(ScreenWidth-25, 5);
-        write('frame counter: ', i, '    ');
+        { # game info }
+        GameStatusDebug(f1, gs);
 
-        GotoXY(ScreenWidth-25, 7);
-        write('?: ', gs.area.borderTop, '    ');
-
-        delay(1000);
         GotoXY(1, 1);
-        {i := i+1}
+        if f1.position.curY < 35 then
+        begin
+            yMove := yMove+1;
+        end
+        else if f1.position.curY = 35 then
+        begin
+            yMove := 0;
+
+            { spawn random figure }
+            randomPositionX := random(gs.area.width-1);
+            xMove := randomPositionX;
+
+            randomNumber := random(17);
+            if randomNumber <> 0 then
+                f1.ftype := randomNumber
+            else
+            begin
+                randomNumber := random(17);
+                f1.ftype := randomNumber
+            end
+
+        end
     end;
 
     { exit program }
