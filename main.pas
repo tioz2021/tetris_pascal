@@ -20,6 +20,9 @@ type
     obj_cord = record
         a, b, c, d: obj_cord_xy;
     end;
+    figure_point_t = record
+        p1, p2, p3, p4, p5, p6, p7, p8: obj_cord_xy;
+    end;
     area_t = record
         borderChar: char;
         borderTop, borderBottom, borderLeft, borderRight: integer;
@@ -43,6 +46,7 @@ type
         position: figure_position_t;
         size: size_t;
         ftype: figure_type_t;
+        point: figure_point_t;
     end;
     direction_t = (down, left, right);
 
@@ -290,6 +294,10 @@ begin
             figure.ftype := 1;
             figure.size.width := 9;
             figure.size.height := 4
+
+            { colision }
+            {figure.point.p1.x;
+                ...}
         end;
         2:
         begin
