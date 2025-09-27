@@ -3,6 +3,8 @@ procedure:
     FigureWrite
     FigureHide
     FigureSetPosition
+    FigureSetCollision
+    FigureWriteCollisionPoint
 
     PlayAreaInit
     PlayAreaWrite
