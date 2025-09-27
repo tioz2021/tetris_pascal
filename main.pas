@@ -226,7 +226,6 @@ begin
             gs.area.borderTop + 1 + yMove
         );
         FigureWrite(f1);
-
         FigureWriteCollisionPoint(f1);
         
         {readln;}

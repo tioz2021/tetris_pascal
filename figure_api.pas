@@ -6,13 +6,13 @@ const
     figuresCount = 17;
 
 type
-    sizeT = record
-        width, height: integer;
-    end;
+    figureTypeNumberT = 0..figuresCount;
     positionT = record
         x, y, curX, curY: integer;
     end;
-    figureTypeNumberT = 0..figuresCount;
+    sizeT = record
+        width, height: integer;
+    end;
     cordXY = record
         x, y: integer;
     end;
@@ -20,9 +20,9 @@ type
         p1, p2, p3, p4, p5, p6, p7, p8: cordXY;
     end;
     figureT = record
+        ftype: figureTypeNumberT;
         position: positionT;
         size: sizeT;
-        ftype: figureTypeNumberT;
         point: pointT;
     end;
 
