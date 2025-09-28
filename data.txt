@@ -1,17 +1,4 @@
 procedure:
-    FigureInit
-    FigureWrite
-    FigureHide
-    FigureSetPosition
-    FigureSetCollision
-    FigureWriteCollisionPoint
-
-    PlayAreaInit
-    PlayAreaWrite
-
-    GameStatusDebug
-    RandomizeNumber
-    QueuePutElment
 
 ##########################################################################
 
