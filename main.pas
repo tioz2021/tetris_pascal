@@ -7,6 +7,8 @@ uses
 
 const
     speed = 500;
+    areaHeight = 34;
+    areaWidth = 36;
 
 type
     sizeT = record
@@ -23,20 +25,12 @@ type
         borderTop, borderBottom, borderLeft, borderRight: integer;
         size: sizeT;
         cord: objCordT;
+        mArr: array [1..areaHeight, 1..areaWidth] of char;
     end;
     gameSettings_t = record
         speed: integer;
         lvl: integer;
         area: areaT;
-    end;
-
-    qPtr = ^qRecord;
-    qRecord = record
-        data: figureT;
-        next: qPtr;
-    end;
-    FigureQueue = record
-        first, last: qPtr;
     end;
 
 function RandomizeNumber(n: integer): integer;
@@ -62,7 +56,7 @@ begin
     startPosX := gs.area.borderLeft;
     startPosY := gs.area.borderTop;
     GotoXY(startPosX, startPosY);
-
+    
     for i := 1 to gs.area.size.height do
     begin
         for j := 1 to gs.area.size.width do
@@ -85,10 +79,37 @@ begin
     end
 end;
 
+procedure PlayAreaCreateMatrix(gs: gameSettings_t);
+var
+    startPosX, startPosY: integer;
+    i, j: integer;
+begin
+    startPosX := gs.area.borderLeft;
+    startPosY := gs.area.borderTop;
+    GotoXY(startPosX, startPosY);
+    
+    for i := 1 to gs.area.size.height do
+    begin
+        for j := 1 to gs.area.size.width do
+        begin
+            gs.area.mArr[i][j] := '0';
+        end
+    end;
+
+    for i := 1 to gs.area.size.height do
+    begin
+        for j := 1 to gs.area.size.width do
+        begin
+            GotoXY(startPosX+j-1, startPosY+i-1);
+            write(gs.area.mArr[i][j]);
+        end
+    end
+end;
+
 procedure PlayAreaInit(var gs: gameSettings_t);
 begin
-    gs.area.size.width := 36;
-    gs.area.size.height := 34;
+    gs.area.size.width := areaWidth;
+    gs.area.size.height := areaHeight;
     gs.area.borderTop := 2;
     gs.area.borderLeft := 10;
     gs.area.borderChar := '*';
@@ -123,6 +144,22 @@ begin
     write('GameLoopCounter: ', gameLoopCounter, '    ')
 end;
 
+procedure QueuePutElment(var fq: FigureQueue; var fig: figureT);
+begin
+    if fq.first = nil then
+    begin
+        new(fq.first);
+        fq.last := fq.first;
+    end
+    else
+    begin
+        new(fq.last^.next);
+        fq.last := fq.last^.next;
+    end;
+    fq.last^.data := fig;
+    fq.last^.next := nil
+end;
+
 var
     saveTextAttr: integer;
     keyCode: integer;
@@ -130,7 +167,10 @@ var
     gs: gameSettings_t;
     fig: figureT;
     fq: FigureQueue;
+    pp1, pp2: ^qPtr;
     gameLoopCounter: integer;
+    i, j, tmpInt: integer;
+    tmpBoolX, tmpBoolY: boolean;
 begin
     { base }
     clrscr;
@@ -138,34 +178,39 @@ begin
     xMove := 0;
     yMove := 0;
     gameLoopCounter := 0;
+    tmpBoolX := false;
+    tmpBoolY := false;
+    tmpInt := 0;
 
     { spawn random figure }
     randomize;
     { # ftype }
-    fig.ftype := RandomizeNumber(figuresCount);
-    {fig.ftype := 1;}
+    {fig.ftype := RandomizeNumber(figuresCount);}
+    fig.ftype := 5;
 
     { game area param }
     PlayAreaInit(gs);
 
-    FigureInit(fig, fig.ftype);
+    FigureInit(fig, fig.ftype, 0);
     FigureSetPosition(fig, gs.area.borderLeft+1, gs.area.borderTop+1);
 
     { init FigureQueue }
     fq.first := nil;
     fq.last := nil;
-    new(fq.first);
-    fq.first^.data := fig;
-    fq.first^.next := nil;
-    fq.last := fq.first;
+
+    pp1 := @(fq.first);
+    pp2 := @(fq.first);
+
+    { # write area }
+    PlayAreaWrite(gs);
+    PlayAreaCreateMatrix(gs);
 
     { main game cycle }
-    while gameLoopCounter < 15 do
+    while gameLoopCounter <> 3 do
     begin
         if KeyPressed then
         begin
             GetKey(keyCode);
-            write(keyCode);
 
             case keyCode of
                 122: { z  change figure type - }
@@ -215,11 +260,40 @@ begin
             end
         end;
 
-        { # write area }
-        PlayAreaWrite(gs);
+        { # check area for move figure }
+        while pp1^ <> nil do
+        begin
+            {
+            GotoXY(5, 1);
+            write('figure id: ', pp1^^.data.id, '    ');
+            }
 
-        { # write }
-        FigureInit(fig, fig.ftype);
+            {GotoXY(5, 1);}
+            {tmpInt := pp1^^.data.point.pArr[3].x;}
+
+            {
+            write('fig.x: ', fig.point.pArr[3].x, '    ');
+            write('fig.y: ', fig.point.pArr[3].y);
+
+            }
+            {fig.point.pArr[1].y}
+
+            {
+            for i := 1 to gs.area.size.height do
+            begin
+                for j := 1 to gs.area.size.width do
+                begin
+                    gs.area.mArr[j][i] := '0';
+                end
+            end;
+            }
+
+            pp1 := @(pp1^^.next)
+        end;
+        pp1 := pp2;
+
+        { # write figure }
+        FigureInit(fig, fig.ftype, gameLoopCounter+1);
         FigureSetPosition(
             fig,
             gs.area.borderLeft + 1 + xMove,
@@ -227,6 +301,7 @@ begin
         );
         FigureWrite(fig);
         FigureWriteCollisionPoint(fig);
+        {FigureCheckCollision();}
         
         {readln;}
             
@@ -247,16 +322,17 @@ begin
             yMove := 0;
 
             { spawn random figure }
-            fig.ftype := RandomizeNumber(figuresCount);
+            {fig.ftype := RandomizeNumber(figuresCount);}
             xMove := RandomizeNumber(
                 gs.area.size.width - fig.size.width);
             
             { add fig to queue }
-            new(fq.last^.next);
-            fq.last^.data := fig;
-            fq.last := fq.last^.next;
+            QueuePutElment(fq, fig);
 
-            gameLoopCounter := gameLoopCounter+1
+            { change matrix }
+
+            gameLoopCounter := gameLoopCounter+1;
+            readln
         end;
 
         { # game info }
@@ -276,17 +352,13 @@ begin
         write('d');
     end;
 
-    {
     clrscr;
     GotoXY(1, 1);
-    }
-
+    
     { check figures }
-    while fq.first^.next <> nil do
+    while fq.first <> nil do
     begin
-        writeln('fType: ', fq.first^.data.ftype);
-        writeln('fHeight: ', fq.first^.data.size.height);
-        writeln('fWidth: ', fq.first^.data.size.width);
+        writeln('figure.id: ', fq.first^.data.id);
         writeln;
         fq.first := fq.first^.next
     end;

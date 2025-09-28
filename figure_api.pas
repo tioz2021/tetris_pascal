@@ -17,6 +17,7 @@ type
         x, y: integer;
     end;
     pointT = record
+        pArr: array[1..8] of cordXY;
         p1, p2, p3, p4, p5, p6, p7, p8: cordXY;
     end;
     figureT = record
@@ -24,16 +25,28 @@ type
         position: positionT;
         size: sizeT;
         point: pointT;
+        id: integer;
+    end;
+
+    qPtr = ^qRecord;
+    qRecord = record
+        data: figureT;
+        next: qPtr;
+    end;
+    FigureQueue = record
+        first, last: qPtr;
     end;
 
 procedure FigureHide(x, y, countX, countY: integer);
 procedure FigureWrite(var figure: figureT);
 procedure FigureSetCollision(var figure: figureT);
 procedure FigureWriteCollisionPoint(var figure: figureT);
-procedure FigureInit(var figure: figureT; figureTypeId: integer);
+procedure
+FigureInit(var figure: figureT; figureTypeId: integer; id: integer);
 procedure FigureSetPosition(var figure: figureT; x, y: integer);
-{
+
 procedure FigureCheckCollision();
+{
 procedure FigureRotation();
 }
 
@@ -266,456 +279,456 @@ end;
 
 procedure FigureSetCollision(var figure: figureT);
 begin
-    figure.point.p5.x := 0;
-    figure.point.p6.x := 0;
-    figure.point.p7.x := 0;
-    figure.point.p8.x := 0;
+    figure.point.pArr[5].x := 0;
+    figure.point.pArr[6].x := 0;
+    figure.point.pArr[7].x := 0;
+    figure.point.pArr[8].x := 0;
 
     case figure.ftype of
         1: 
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY+2;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY+2;
 
-            figure.point.p2.x := figure.position.curX;
-            figure.point.p2.y := figure.position.curY+3;
+            figure.point.pArr[2].x := figure.position.curX;
+            figure.point.pArr[2].y := figure.position.curY+3;
 
-            figure.point.p3.x := 
+            figure.point.pArr[3].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p3.y := figure.position.curY;
+            figure.point.pArr[3].y := figure.position.curY;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p4.y := figure.position.curY;
+            figure.point.pArr[4].y := figure.position.curY;
 
-            figure.point.p5.x := 
+            figure.point.pArr[5].x := 
                 figure.position.curX + figure.size.width-4;
-            figure.point.p5.y := figure.position.curY+1;
+            figure.point.pArr[5].y := figure.position.curY+1;
 
-            figure.point.p6.x :=
+            figure.point.pArr[6].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p6.y := figure.position.curY+3
+            figure.point.pArr[6].y := figure.position.curY+3
         end;
         2:
         begin
-            figure.point.p1.x := figure.position.curX+3;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX+3;
+            figure.point.pArr[1].y := figure.position.curY;
             
-            figure.point.p2.x := figure.position.curX+5;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].x := figure.position.curX+5;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX+2;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX+2;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x :=
+            figure.point.pArr[4].x :=
                 figure.position.curX + figure.size.width-3;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].x := figure.position.curX;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := figure.position.curX; 
-            figure.point.p6.y := figure.position.curY+3;
+            figure.point.pArr[6].x := figure.position.curX; 
+            figure.point.pArr[6].y := figure.position.curY+3;
 
-            figure.point.p7.x :=
+            figure.point.pArr[7].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p7.y := figure.position.curY+2;
+            figure.point.pArr[7].y := figure.position.curY+2;
 
-            figure.point.p8.x :=
+            figure.point.pArr[8].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p8.y := figure.position.curY+3;
+            figure.point.pArr[8].y := figure.position.curY+3;
         end;
         3:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
             
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX;
-            figure.point.p5.y := 
+            figure.point.pArr[5].x := figure.position.curX;
+            figure.point.pArr[5].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p6.x := figure.position.curX+2;
-            figure.point.p6.y := 
+            figure.point.pArr[6].x := figure.position.curX+2;
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         4:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX; 
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX; 
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
         end;
         5:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX; 
-            figure.point.p3.y := 
+            figure.point.pArr[3].x := figure.position.curX; 
+            figure.point.pArr[3].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := 
+            figure.point.pArr[4].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         6:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-4;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-4;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX+3;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].x := figure.position.curX+3;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := 
+            figure.point.pArr[6].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p6.y := figure.position.curY+2;
+            figure.point.pArr[6].y := figure.position.curY+2;
 
-            figure.point.p7.x := figure.position.curX+3;
-            figure.point.p7.y := figure.position.curY+3;
+            figure.point.pArr[7].x := figure.position.curX+3;
+            figure.point.pArr[7].y := figure.position.curY+3;
 
-            figure.point.p8.x := 
+            figure.point.pArr[8].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p8.y := figure.position.curY+3;
+            figure.point.pArr[8].y := figure.position.curY+3;
         end;
         7:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX+2;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].x := figure.position.curX+2;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := 
+            figure.point.pArr[6].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p6.y := figure.position.curY+2;
+            figure.point.pArr[6].y := figure.position.curY+2;
 
-            figure.point.p7.x := figure.position.curX+2;
-            figure.point.p7.y := figure.position.curY+3;
+            figure.point.pArr[7].x := figure.position.curX+2;
+            figure.point.pArr[7].y := figure.position.curY+3;
 
-            figure.point.p8.x := 
+            figure.point.pArr[8].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p8.y := figure.position.curY+3;
+            figure.point.pArr[8].y := figure.position.curY+3;
         end;
         8:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := figure.position.curX+2;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].x := figure.position.curX+2;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+3;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+3;
 
-            figure.point.p4.x := figure.position.curX+2;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].x := figure.position.curX+2;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := 
+            figure.point.pArr[5].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := 
+            figure.point.pArr[6].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p6.y := 
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p7.x := 
+            figure.point.pArr[7].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p7.y := 
+            figure.point.pArr[7].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         9:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y :=
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y :=
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y :=
+            figure.point.pArr[4].y :=
                 figure.position.curY + figure.size.height-1;
         end;
         10:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := figure.position.curX+2;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].x := figure.position.curX+2;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := 
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p4.x := figure.position.curX+3;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].x := figure.position.curX+3;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := 
+            figure.point.pArr[5].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := 
+            figure.point.pArr[6].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p6.y := figure.position.curY+3;
+            figure.point.pArr[6].y := figure.position.curY+3;
 
-            figure.point.p7.x := figure.position.curX+3;
-            figure.point.p7.y := figure.position.curY+4;
+            figure.point.pArr[7].x := figure.position.curX+3;
+            figure.point.pArr[7].y := figure.position.curY+4;
 
-            figure.point.p8.x := figure.position.curX+2;
-            figure.point.p8.y := 
+            figure.point.pArr[8].x := figure.position.curX+2;
+            figure.point.pArr[8].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         11:
         begin
-            figure.point.p1.x := figure.position.curX+3;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX+3;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX+2;
-            figure.point.p3.y := figure.position.curY+3;
+            figure.point.pArr[3].x := figure.position.curX+2;
+            figure.point.pArr[3].y := figure.position.curY+3;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := 
+            figure.point.pArr[4].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p5.x := figure.position.curX;
-            figure.point.p5.y := 
+            figure.point.pArr[5].x := figure.position.curX;
+            figure.point.pArr[5].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p6.x := figure.position.curX;
-            figure.point.p6.y := 
+            figure.point.pArr[6].x := figure.position.curX;
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-2;
         end;
         12:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x :=
+            figure.point.pArr[2].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x :=
+            figure.point.pArr[4].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x :=
+            figure.point.pArr[5].x :=
                 figure.position.curX + figure.size.width-4;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x :=
+            figure.point.pArr[6].x :=
                 figure.position.curX + figure.size.width-3;
-            figure.point.p6.y := 
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p7.x :=
+            figure.point.pArr[7].x :=
                 figure.position.curX + figure.size.width-1;
-            figure.point.p7.y := 
+            figure.point.pArr[7].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         13:
         begin
-            figure.point.p1.x := figure.position.curX+3;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX+3;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX+2;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX+2;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := 
+            figure.point.pArr[4].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p5.x := 
+            figure.point.pArr[5].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p5.y := 
+            figure.point.pArr[5].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p6.x := figure.position.curX+2;
-            figure.point.p6.y := figure.position.curY+4;
+            figure.point.pArr[6].x := figure.position.curX+2;
+            figure.point.pArr[6].y := figure.position.curY+4;
 
-            figure.point.p7.x := figure.position.curX;
-            figure.point.p7.y := figure.position.curY+2;
+            figure.point.pArr[7].x := figure.position.curX;
+            figure.point.pArr[7].y := figure.position.curY+2;
 
-            figure.point.p8.x := figure.position.curX;
-            figure.point.p8.y := figure.position.curY+3;
+            figure.point.pArr[8].x := figure.position.curX;
+            figure.point.pArr[8].y := figure.position.curY+3;
         end;
         14:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := 
+            figure.point.pArr[5].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p5.y := 
+            figure.point.pArr[5].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p6.x := 
+            figure.point.pArr[6].x := 
                 figure.position.curX + figure.size.width-3;
-            figure.point.p6.y := 
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p7.x := figure.position.curX+2;
-            figure.point.p7.y := figure.position.curY+2;
+            figure.point.pArr[7].x := figure.position.curX+2;
+            figure.point.pArr[7].y := figure.position.curY+2;
         end;
         15:
         begin
-            figure.point.p1.x := figure.position.curX+3;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX+3;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX+3;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX+3;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].x := figure.position.curX;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x :=
+            figure.point.pArr[6].x :=
                 figure.position.curX + figure.size.width-3;
-            figure.point.p6.y := figure.position.curY+2;
+            figure.point.pArr[6].y := figure.position.curY+2;
 
-            figure.point.p7.x := figure.position.curX;
-            figure.point.p7.y := figure.position.curY+3;
+            figure.point.pArr[7].x := figure.position.curX;
+            figure.point.pArr[7].y := figure.position.curY+3;
             
-            figure.point.p8.x := figure.position.curX;
-            figure.point.p8.x :=
+            figure.point.pArr[8].x := figure.position.curX;
+            figure.point.pArr[8].x :=
                 figure.position.curX + figure.size.width-4;
         end;
         16:
         begin
-            figure.point.p1.x := figure.position.curX;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX;
-            figure.point.p3.y := 
+            figure.point.pArr[3].x := figure.position.curX;
+            figure.point.pArr[3].y := 
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y := figure.position.curY+1;
+            figure.point.pArr[4].y := figure.position.curY+1;
 
-            figure.point.p5.x := figure.position.curX+3;
-            figure.point.p5.y := figure.position.curY+2;
+            figure.point.pArr[5].x := figure.position.curX+3;
+            figure.point.pArr[5].y := figure.position.curY+2;
 
-            figure.point.p6.x := figure.position.curX+2;
-            figure.point.p6.y := 
+            figure.point.pArr[6].x := figure.position.curX+2;
+            figure.point.pArr[6].y := 
                 figure.position.curY + figure.size.height-1;
         end;
         17:
         begin
-            figure.point.p1.x := figure.position.curX+3;
-            figure.point.p1.y := figure.position.curY;
+            figure.point.pArr[1].x := figure.position.curX+3;
+            figure.point.pArr[1].y := figure.position.curY;
 
-            figure.point.p2.x := 
+            figure.point.pArr[2].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p2.y := figure.position.curY;
+            figure.point.pArr[2].y := figure.position.curY;
 
-            figure.point.p3.x := figure.position.curX+3;
-            figure.point.p3.y := figure.position.curY+1;
+            figure.point.pArr[3].x := figure.position.curX+3;
+            figure.point.pArr[3].y := figure.position.curY+1;
 
-            figure.point.p4.x := 
+            figure.point.pArr[4].x := 
                 figure.position.curX + figure.size.width-1;
-            figure.point.p4.y :=
+            figure.point.pArr[4].y :=
                 figure.position.curY + figure.size.height-3;
 
-            figure.point.p5.x := figure.position.curX;
-            figure.point.p5.y :=
+            figure.point.pArr[5].x := figure.position.curX;
+            figure.point.pArr[5].y :=
                 figure.position.curY + figure.size.height-1;
 
-            figure.point.p6.x := figure.position.curX+3;
-            figure.point.p6.y :=
+            figure.point.pArr[6].x := figure.position.curX+3;
+            figure.point.pArr[6].y :=
                 figure.position.curY + figure.size.height-2;
 
-            figure.point.p7.x := figure.position.curX+2;
-            figure.point.p7.y :=
+            figure.point.pArr[7].x := figure.position.curX+2;
+            figure.point.pArr[7].y :=
                 figure.position.curY + figure.size.height-1;
 
         end;
@@ -724,38 +737,41 @@ end;
 
 procedure FigureWriteCollisionPoint(var figure: figureT);
 begin
-    GotoXY(figure.point.p1.x, figure.point.p1.y);
+    GotoXY(figure.point.pArr[1].x, figure.point.pArr[1].y);
     write('1');
-    GotoXY(figure.point.p2.x, figure.point.p2.y);
+    GotoXY(figure.point.pArr[2].x, figure.point.pArr[2].y);
     write('2');
-    GotoXY(figure.point.p3.x, figure.point.p3.y);
+    GotoXY(figure.point.pArr[3].x, figure.point.pArr[3].y);
     write('3');
-    GotoXY(figure.point.p4.x, figure.point.p4.y);
+    GotoXY(figure.point.pArr[4].x, figure.point.pArr[4].y);
     write('4');
-    if figure.point.p5.x <> 0 then
+    if figure.point.pArr[5].x <> 0 then
     begin
-        GotoXY(figure.point.p5.x, figure.point.p5.y);
+        GotoXY(figure.point.pArr[5].x, figure.point.pArr[5].y);
         write('5')
     end;
-    if figure.point.p6.x <> 0 then
+    if figure.point.pArr[6].x <> 0 then
     begin
-        GotoXY(figure.point.p6.x, figure.point.p6.y);
+        GotoXY(figure.point.pArr[6].x, figure.point.pArr[6].y);
         write('6')
     end;
-    if figure.point.p7.x <> 0 then
+    if figure.point.pArr[7].x <> 0 then
     begin
-        GotoXY(figure.point.p7.x, figure.point.p7.y);
+        GotoXY(figure.point.pArr[7].x, figure.point.pArr[7].y);
         write('7')
     end;
-    if figure.point.p8.x <> 0 then
+    if figure.point.pArr[8].x <> 0 then
     begin
-        GotoXY(figure.point.p8.x, figure.point.p8.y);
+        GotoXY(figure.point.pArr[8].x, figure.point.pArr[8].y);
         write('8')
     end;
 end;
 
-procedure FigureInit(var figure: figureT; figureTypeId: integer);
+procedure
+FigureInit(var figure: figureT; figureTypeId: integer; id: integer);
 begin
+    figure.id := id;
+
     case figureTypeId of
         1:
         begin
@@ -910,6 +926,11 @@ begin
     figure.position.cury := y;
     
     FigureSetCollision(figure);
+end;
+
+procedure FigureCheckCollision();
+begin
+    write('h');
 end;
 
 end.
