@@ -107,17 +107,17 @@ begin
     gs.area.cord.d.x := gs.area.borderLeft-1;
 end;
 
-procedure GameStatusDebug(f1: figureT;
+procedure GameStatusDebug(fig: figureT;
     gs: gameSettings_t; gameLoopCounter: integer);
 begin
     GotoXY(ScreenWidth-25, 1);
     write('Game Info: ');
     GotoXY(ScreenWidth-25, 2);
-    write('figure type: ', f1.ftype, '    ');
+    write('figure type: ', fig.ftype, '    ');
     GotoXY(ScreenWidth-25, 3);
-    write('f1 pos curX: ', f1.position.curX, '    ');
+    write('fig pos curX: ', fig.position.curX, '    ');
     GotoXY(ScreenWidth-25, 4);
-    write('f1 pos curY: ', f1.position.curY, '    ');
+    write('fig pos curY: ', fig.position.curY, '    ');
 
     GotoXY(ScreenWidth-25, 8);
     write('GameLoopCounter: ', gameLoopCounter, '    ')
@@ -128,7 +128,7 @@ var
     keyCode: integer;
     xMove, yMove: integer;
     gs: gameSettings_t;
-    f1: figureT;
+    fig: figureT;
     fq: FigureQueue;
     gameLoopCounter: integer;
 begin
@@ -142,20 +142,20 @@ begin
     { spawn random figure }
     randomize;
     { # ftype }
-    f1.ftype := RandomizeNumber(figuresCount);
-    {f1.ftype := 1;}
+    fig.ftype := RandomizeNumber(figuresCount);
+    {fig.ftype := 1;}
 
     { game area param }
     PlayAreaInit(gs);
 
-    FigureInit(f1, f1.ftype);
-    FigureSetPosition(f1, gs.area.borderLeft+1, gs.area.borderTop+1);
+    FigureInit(fig, fig.ftype);
+    FigureSetPosition(fig, gs.area.borderLeft+1, gs.area.borderTop+1);
 
     { init FigureQueue }
     fq.first := nil;
     fq.last := nil;
     new(fq.first);
-    fq.first^.data := f1;
+    fq.first^.data := fig;
     fq.first^.next := nil;
     fq.last := fq.first;
 
@@ -170,11 +170,11 @@ begin
             case keyCode of
                 122: { z  change figure type - }
                 begin
-                    f1.ftype := f1.ftype-1
+                    fig.ftype := fig.ftype-1
                 end;
                 120: { x  change figure type + }
                 begin
-                    f1.ftype := f1.ftype+1
+                    fig.ftype := fig.ftype+1
                 end;
                 -72: { up }
                 begin
@@ -187,15 +187,15 @@ begin
                 -75: { left }
                 begin
                     {11}
-                    if f1.position.curX > gs.area.cord.a.x+2 then
+                    if fig.position.curX > gs.area.cord.a.x+2 then
                     begin
                         xMove := xMove-1
                     end
                 end;
                 -77: { right }
                 begin
-                    if f1.position.curX < 
-                        gs.area.cord.b.x - f1.size.width-1 then 
+                    if fig.position.curX < 
+                        gs.area.cord.b.x - fig.size.width-1 then 
                     begin
                         xMove := xMove+1
                     end
@@ -219,48 +219,48 @@ begin
         PlayAreaWrite(gs);
 
         { # write }
-        FigureInit(f1, f1.ftype);
+        FigureInit(fig, fig.ftype);
         FigureSetPosition(
-            f1,
+            fig,
             gs.area.borderLeft + 1 + xMove,
             gs.area.borderTop + 1 + yMove
         );
-        FigureWrite(f1);
-        FigureWriteCollisionPoint(f1);
+        FigureWrite(fig);
+        FigureWriteCollisionPoint(fig);
         
         {readln;}
             
         delay(200);
 
-        if f1.position.curY < gs.area.size.height+1 then
+        if fig.position.curY < gs.area.size.height+1 then
         begin
             FigureHide(
                 gs.area.borderLeft + xMove,
                 gs.area.borderTop + 1 + yMove,          
-                f1.size.width,
-                f1.size.height 
+                fig.size.width,
+                fig.size.height 
             );
             yMove := yMove+1
         end
-        else if f1.position.curY = gs.area.size.height+1 then
+        else if fig.position.curY = gs.area.size.height+1 then
         begin
             yMove := 0;
 
             { spawn random figure }
-            f1.ftype := RandomizeNumber(figuresCount);
+            fig.ftype := RandomizeNumber(figuresCount);
             xMove := RandomizeNumber(
-                gs.area.size.width - f1.size.width);
+                gs.area.size.width - fig.size.width);
             
-            { add f1 to queue }
+            { add fig to queue }
             new(fq.last^.next);
-            fq.last^.data := f1;
+            fq.last^.data := fig;
             fq.last := fq.last^.next;
 
             gameLoopCounter := gameLoopCounter+1
         end;
 
         { # game info }
-        GameStatusDebug(f1, gs, gameLoopCounter);
+        GameStatusDebug(fig, gs, gameLoopCounter);
         GotoXY(1, 1);
 
         GotoXY(gs.area.cord.a.x, gs.area.cord.a.y);
