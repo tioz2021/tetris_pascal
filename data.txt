@@ -1,4 +1,9 @@
 procedure:
+    DrawGameMatrix
+    DrawChar
+    DrawFigure
+
+    DrawCheckMatrix
 
 ##########################################################################
 

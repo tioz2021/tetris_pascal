@@ -15,7 +15,6 @@ type
 
     gameSettings = record
         matrix: gameMatrixT;
-        moveStatus: boolean;
     end;
 
     figureTypeNumberT = 1..FIGURE_COUNT;
@@ -73,46 +72,29 @@ begin
     write(ch)
 end;
 
-function DrawCheckMatrix(
+procedure DrawCheckMatrix(
     var fig: figureT;
     var gameMatrix: gameMatrixT;
     x, y: integer
-): boolean;
-var
-    i, j: integer;
+);
 begin
     GotoXY(1, 2);
-    write('check x: ', x, '  ');
+    write('x: ', x, '  ');
     write('y: ', y, '  ');
-    
-    {
-    gameMatrix[x, y] := 'x';
-    GotoXY(x, y);
-    write(gameMatrix[x, y]);
-    GotoXY(20, 2);
-    }
 
-    if gameMatrix[x, y] = '0' then
-    begin
-        write('true');
-        DrawCheckMatrix := true
-    end
-    else
-    begin
-        write('false');
-        DrawCheckMatrix := false
-    end
+    {
+    write('gm: ', gameMatrix[x, y+fig.size.height], '    ');
+    }
 end;
 
 procedure DrawFigure(
     var fig: figureT;
-    var gs: gameSettings;
+    var gameMatrix: gameMatrixT;
     x, y: integer;
     ch: char
 );
 var
     i, j: integer;
-    draw: boolean;
 begin
     for i := 1 to fig.size.height do
     begin
@@ -125,117 +107,43 @@ begin
                     begin
                         if j > 6 then
                         begin
-                            DrawChar(gs.matrix, x+j-1, y+i-1, ch)
+                            DrawCheckMatrix(fig, gameMatrix, x+j-1, y+i);
+                            DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                         end
                     end
                     else    
-                    begin
-
-                        DrawChar(gs.matrix, x+j-1, y+i-1, ch)
-                    end
+                        DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                 end;
-
-                { ==================================================== }
                 2:
                 begin
                     if i <= 2 then
                     begin
                         if (j > 3) and (j < 7) then
-                            DrawChar(gs.matrix, x+j-1, y+i-1, ch)
+                            DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                     end
                     else    
-                        DrawChar(gs.matrix, x+j-1, y+i-1, ch)
+                        DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                 end;
                 3:
                 begin
                     if i <= 2 then
                     begin
-                        DrawChar(gs.matrix, x+j-1, y+i-1, ch)
+                        DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                     end
                     else    
                     begin
                         if j < 4 then
-                            DrawChar(gs.matrix, x+j-1, y+i-1, ch)
+                            DrawChar(gameMatrix, x+j-1, y+i-1, ch)
                     end
                 end;
             {end case}
             end;
-            {
-            GotoXY(30, 1);
-            if not draw then
-            begin
-                gs.moveStatus := false;
-                write('stop    ');
-            end
-            else
-                gs.moveStatus := true;
-                write('play    ');
-            }
 
         {end for j }
         end
     {end for i }
     end
 end;
-
-procedure DrawFigure_test(
-    var fig: figureT;
-    var gs: gameSettings;
-    x, y: integer;
-    ch: char
-);
-var
-    i, j: integer;
-    draw: boolean;
-begin
-    for i := 1 to fig.size.height+1 do
-    begin
-        for j := 1 to fig.size.width+1 do
-        begin
-            case fig.ftype of
-                1:
-                begin
-                    if i > 2 then
-                    begin
-                        if j > 6 then
-                        begin
-                            DrawCheckMatrix(
-                                fig,
-                                gs.matrix,
-                                x+j+MATRIX_BORDER_LEFT-1,
-                                y+i+MATRIX_BORDER_TOP-1
-                            );
-
-                            {DrawChar(gs.matrix, x+j-1, y+i-1, ch)}
-                        end
-                    end
-                    else    
-                    begin
-
-                        {DrawChar(gs.matrix, x+j-1, y+i-1, ch)}
-                    end
-                end;
-            {end case}
-            end;
-
-            GotoXY(30, 1);
-            if not draw then
-            begin
-                gs.moveStatus := false;
-                write('stop    ')
-            end
-            else
-            begin
-                gs.moveStatus := true;
-                write('play    ');
-            end
-
-        {end for j }
-        end
-    {end for i }
-    end
-end;
-
 
 var
     fig, fig2: figureT;
@@ -248,7 +156,6 @@ begin
     
     xMove := 0;
     yMove := 0;
-    gs.moveStatus := true;
     DrawGameMatrix(gs.matrix);
 
     fig.ftype := 1;
@@ -265,13 +172,12 @@ begin
         write('xMove: ', xMove, '  ');
         write('yMove: ', yMove);
 
-        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove, FIGURE_BG);
-        DrawFigure_test(fig, gs, xMove+MATRIX_BORDER_LEFT, yMove+1, 'x');
-        delay(250);
-        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove, '0');
-        DrawFigure_test(fig, gs, xMove+MATRIX_BORDER_LEFT, yMove+1, '0');
+        DrawFigure(fig, gs.matrix,
+            xMove+MATRIX_BORDER_LEFT, yMove, FIGURE_BG);
+        delay(150);
+        DrawFigure(fig, gs.matrix, xMove+MATRIX_BORDER_LEFT, yMove, '0');
 
-        DrawFigure(fig2, gs, 10, 20, FIGURE_BG);
+        DrawFigure(fig2, gs.matrix, 5, 20, FIGURE_BG);
 
         if KeyPressed then
         begin
@@ -293,8 +199,7 @@ begin
                 begin
                     if yMove < (MATRIX_HEIGHT - MATRIX_BORDER_TOP-3) then
                     begin
-                        if gs.moveStatus then
-                            yMove := yMove+1
+                        yMove := yMove+1
                     end
                 end;
                 -75: { left }
