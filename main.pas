@@ -68,9 +68,9 @@ begin
     write('gm: ',gameMatrix[localX, localY]);
     }
 
-    gameMatrix[localX, localY] := ch;
+    gameMatrix[localY, localX] := ch;
     GotoXY(localX, localY);
-    write(ch)
+    write(ch);
 end;
 
 function DrawCheckMatrix(
@@ -84,22 +84,17 @@ begin
     GotoXY(1, 2);
     write('check x: ', x, '  ');
     write('y: ', y, '  ');
-    
-    {
-    gameMatrix[x, y] := 'x';
-    GotoXY(x, y);
-    write(gameMatrix[x, y]);
-    GotoXY(20, 2);
-    }
+    GotoXY(1, 1);
 
-    if gameMatrix[x, y] = '0' then
+    write(gameMatrix[y, x]);
+    GotoXY(20, 2);
+
+    if gameMatrix[y, x] = '0' then
     begin
-        write('true');
         DrawCheckMatrix := true
     end
     else
     begin
-        write('false');
         DrawCheckMatrix := false
     end
 end;
@@ -130,55 +125,18 @@ begin
                     end
                     else    
                     begin
-
                         DrawChar(gs.matrix, x+j-1, y+i-1, ch)
                     end
-                end;
-
-                { ==================================================== }
-                2:
-                begin
-                    if i <= 2 then
-                    begin
-                        if (j > 3) and (j < 7) then
-                            DrawChar(gs.matrix, x+j-1, y+i-1, ch)
-                    end
-                    else    
-                        DrawChar(gs.matrix, x+j-1, y+i-1, ch)
-                end;
-                3:
-                begin
-                    if i <= 2 then
-                    begin
-                        DrawChar(gs.matrix, x+j-1, y+i-1, ch)
-                    end
-                    else    
-                    begin
-                        if j < 4 then
-                            DrawChar(gs.matrix, x+j-1, y+i-1, ch)
-                    end
-                end;
-            {end case}
-            end;
-            {
-            GotoXY(30, 1);
-            if not draw then
-            begin
-                gs.moveStatus := false;
-                write('stop    ');
+                end
             end
-            else
-                gs.moveStatus := true;
-                write('play    ');
-            }
-
         {end for j }
         end
     {end for i }
-    end
+    end;
+    GotoXY(1, 1)
 end;
 
-procedure DrawFigure_test(
+procedure DrawFigureCheckerBorder(
     var fig: figureT;
     var gs: gameSettings;
     x, y: integer;
@@ -186,59 +144,48 @@ procedure DrawFigure_test(
 );
 var
     i, j: integer;
-    draw: boolean;
 begin
-    for i := 1 to fig.size.height+1 do
+    for i := 1 to fig.size.height do
     begin
-        for j := 1 to fig.size.width+1 do
+        for j := 1 to fig.size.width do
         begin
             case fig.ftype of
                 1:
                 begin
-                    if i > 2 then
+                    if i > 4 then
                     begin
                         if j > 6 then
                         begin
-                            DrawCheckMatrix(
+                            gs.moveStatus := DrawCheckMatrix(
                                 fig,
                                 gs.matrix,
-                                x+j+MATRIX_BORDER_LEFT-1,
-                                y+i+MATRIX_BORDER_TOP-1
+                                x+j+1,
+                                y+i+1
                             );
-
-                            {DrawChar(gs.matrix, x+j-1, y+i-1, ch)}
+                            {DrawChar(gs.matrix, x+j-2, y+i-2, ch)}
                         end
                     end
                     else    
                     begin
-
-                        {DrawChar(gs.matrix, x+j-1, y+i-1, ch)}
+                        gs.moveStatus := DrawCheckMatrix(
+                            fig,
+                            gs.matrix,
+                            x+j+1,
+                            y+i+1
+                        );
+                        {DrawChar(gs.matrix, x+j-2, y+i-2, ch)}
                     end
-                end;
-            {end case}
+                end
             end;
-
-            GotoXY(30, 1);
-            if not draw then
-            begin
-                gs.moveStatus := false;
-                write('stop    ')
-            end
-            else
-            begin
-                gs.moveStatus := true;
-                write('play    ');
-            end
-
         {end for j }
         end
     {end for i }
-    end
+    end;
+    GotoXY(1, 1)
 end;
 
-
 var
-    fig, fig2: figureT;
+    fig, figB, fig2, fig2B: figureT;
     gs: gameSettings;
     keyCode: integer;
     x, y, i: integer;
@@ -254,23 +201,33 @@ begin
     fig.ftype := 1;
     fig.size.width := 9;
     fig.size.height := 6;
+    figB.ftype := 1;
+    figB.size.width := fig.size.width+2;
+    figB.size.height := fig.size.height+2;
 
-    fig2.ftype := 3;
-    fig2.size.width := 6;
+    fig2.ftype := 1;
+    fig2.size.width := 9;
     fig2.size.height := 6;
+    fig2B.ftype := 1;
+    fig2B.size.width := fig2.size.width+2;
+    fig2B.size.height := fig2.size.height+2;
 
     while true do
     begin
+        
+        GotoXY(20, 1);
+        write('gs.moveStatus: ', gs.moveStatus);
         GotoXY(1, 1);
-        write('xMove: ', xMove, '  ');
-        write('yMove: ', yMove);
 
-        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove, FIGURE_BG);
-        DrawFigure_test(fig, gs, xMove+MATRIX_BORDER_LEFT, yMove+1, 'x');
-        delay(250);
-        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove, '0');
-        DrawFigure_test(fig, gs, xMove+MATRIX_BORDER_LEFT, yMove+1, '0');
+        DrawFigureCheckerBorder(figB, gs, xMove+MATRIX_BORDER_LEFT+1,
+            yMove+1, 'x');
+        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove+1, FIGURE_BG);
+        delay(100);
+        DrawFigure(fig, gs, xMove+MATRIX_BORDER_LEFT+1, yMove+1, '0');
+        DrawFigureCheckerBorder(figB, gs, xMove+MATRIX_BORDER_LEFT+1,
+            yMove+1, '0');
 
+        DrawFigureCheckerBorder(fig2B, gs, 10, 20, 'x');
         DrawFigure(fig2, gs, 10, 20, FIGURE_BG);
 
         if KeyPressed then
@@ -282,7 +239,6 @@ begin
                 end;
                 120: { x }
                 begin
-
                 end;
                 -72: { up }
                 begin
@@ -314,7 +270,8 @@ begin
                 begin
                     GotoXY(1, 1);
                     clrscr;
-                    halt(1)
+                    break;
+                    {halt(1)}
                 end;
                 27: 
                 begin
@@ -323,6 +280,19 @@ begin
                     halt(1)
                 end
             end
+        end
+    end;
+
+    for x := 1 to MATRIX_WIDTH do
+    begin
+        for y := 1 to MATRIX_HEIGHT do
+        begin
+            if (x > MATRIX_BORDER_LEFT) and (y > MATRIX_BORDER_TOP) then
+                write(gs.matrix[x][y])
+            else
+                write(' ');
         end;
-    end
+        writeln
+    end;
+    writeln
 end.
