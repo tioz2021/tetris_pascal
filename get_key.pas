@@ -20,6 +20,7 @@ begin
     begin
         code := ord(c)
     end
+
 end;
 
 end.

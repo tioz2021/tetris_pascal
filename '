@@ -1,0 +1,72 @@
+program tetris;
+uses crt, get_key;
+
+type
+    field_t = array[1..10, 1..10] of char;
+    figure_t = array [1..4, 1..4] of char;
+
+procedure WriteFigure(var figure: figure_t; ch: char);
+var
+    i, j: integer;
+begin
+    for i := 1 to 4 do
+    begin
+        for j := 1 to 4 do
+        begin
+            figure[i][j] := ch
+        end;
+    end;
+
+    for i := 1 to 4 do
+    begin
+        for j := 1 to 4 do
+        begin
+            write(figure[i][j]);
+        end;
+        writeln
+    end
+end;
+
+procedure WriteField(var field: field_t; ch: char);
+var
+    i, j: integer;
+begin
+    for i := 1 to 10 do
+    begin
+        for j := 1 to 10 do
+        begin
+            field[i][j] := ch
+        end;
+    end;
+
+    for i := 1 to 10 do
+    begin
+        for j := 1 to 10 do
+        begin
+            write(field[i][j]);
+        end;
+        writeln
+    end
+end;
+
+var
+    field: field_t;
+    figure: figure_t;
+    i: integer;
+begin
+    clrscr;
+
+    i := 1;
+    GotoXY(1, 1);
+    WriteField(field);
+
+    while i < 15 do
+    begin
+        WriteFigure(figure, ' ');
+        delay(100);
+        WriteFigure(figure, '1');
+        GotoXY(1, i);
+        i := i + 1
+    end
+
+end.
