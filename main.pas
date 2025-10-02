@@ -57,7 +57,7 @@ var
 begin
     
     case ftype of
-        1: 
+        14: 
         begin
             {
                 ######
@@ -148,8 +148,8 @@ begin
     GotoXY(1, 1);
 
     WriteField(field, '0');
-    WriteFigure(figure, field, 1, 15, '1', 1);
-    WriteFigure(figure, field, 10, 10, '1', 1);
+    WriteFigure(figure, field, 1, 15, '1', 14);
+    WriteFigure(figure, field, 10, 10, '1', 14);
     UpdateField(field);
 
     xMove := 0;
@@ -160,10 +160,10 @@ begin
     begin
         clrscr;
         GotoXY(1, 1);
-        WriteFigure(figure, field, xMove+5, yMove+3, ACTIVE_FIGURE, 1);
+        WriteFigure(figure, field, xMove+5, yMove+3, ACTIVE_FIGURE, 14);
         UpdateField(field);
         delay(250);
-        WriteFigure(figure, field, xMove+5, yMove+3, '0', 1);
+        WriteFigure(figure, field, xMove+5, yMove+3, '0', 14);
 
         if KeyPressed then
         begin
