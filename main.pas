@@ -1,33 +1,97 @@
 program Tetris;
 
-uses crt;
+uses crt, get_key;
 
 const
-    FIELD_WIDTH = 10;
-    FIELD_HEIGHT = 20;
+    FIELD_WIDTH = 20;
+    FIELD_HEIGHT = 30;
     FIELD_OFFSET_TOP = 2;
     FIELD_OFFSET_LEFT = 5;
     FIGURE_COUNT = 7;
-    FIGURE_WIDTH = 4;
-    FIGURE_HEIGHT = 4;
+    FIGURE_WIDTH = 8;
+    FIGURE_HEIGHT = 8;
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
     ] of byte = (
         { I }
-        ((0,0,0,0), (1,1,1,1), (0,0,0,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 1, 1, 1, 1, 1, 1),
+            { row 3/4 }
+            (1, 1, 1, 1, 1, 1, 1, 1), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 5/6 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { O }
-        ((0,0,0,0), (0,1,1,0), (0,1,1,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
+            { row 3/4 }
+            (0, 0, 1, 1, 1, 1, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
+            { row 5/6 }
+            (0, 0, 1, 1, 1, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { T }
-        ((0,0,0,0), (0,1,0,0), (1,1,1,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 0, 0, 0, 0),
+            { row 3/4 }
+            (0, 0, 1, 1, 0, 0, 0, 0), (1, 1, 1, 1, 1, 1, 0, 0),
+            { row 5/6 }
+            (1, 1, 1, 1, 1, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { S }
-        ((0,0,0,0), (0,1,1,0), (1,1,0,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
+            { row 3/4 }
+            (0, 0, 1, 1, 1, 1, 0, 0), (1, 1, 1, 1, 0, 0, 0, 0),
+            { row 5/6 }
+            (1, 1, 1, 1, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { Z }
-        ((0,0,0,0), (1,1,0,0), (0,1,1,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 1, 1, 0, 0, 0, 0),
+            { row 3/4 }
+            (1, 1, 1, 1, 0, 0, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
+            { row 5/6 }
+            (0, 0, 1, 1, 1, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { J }
-        ((0,0,0,0), (1,0,0,0), (1,1,1,0), (0,0,0,0)),
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0),
+            { row 3/4 }
+            (1, 1, 0, 0, 0, 0, 0, 0), (1, 1, 1, 1, 1, 1, 0, 0),
+            { row 5/6 }
+            (1, 1, 1, 1, 1, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        ),
         { L }
-        ((0,0,0,0), (0,0,1,0), (1,1,1,0), (0,0,0,0))
+        (
+            { row 1/2 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 1, 1, 0, 0),
+            { row 3/4 }
+            (0, 0, 0, 0, 1, 1, 0, 0), (1, 1, 1, 1, 1, 1, 0, 0),
+            { row 5/6 }
+            (1, 1, 1, 1, 1, 1, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
+            { row 7/8 }
+            (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
+        )
+        {((0,0,0,0), (0,0,1,0), (1,1,1,0), (0,0,0,0))}
     );
 
 type
@@ -82,11 +146,12 @@ procedure InitFigure(var fig: TFigure);
 var
     i, j: byte;
 begin
-    for i := 1 to FIGURE_WIDTH do
+    for i := 1 to FIGURE_HEIGHT do
     begin
-        for j := 1 to FIGURE_HEIGHT do 
+        for j := 1 to FIGURE_WIDTH do 
         begin
-            fig.body[i][j] := FIGURES[random(FIGURE_COUNT)+1, i, j]
+            fig.body[i][j] := FIGURES[fig.ftype, i, j]
+            {fig.body[i][j] := FIGURES[7, i, j]}
         end
     end
 end;
@@ -95,14 +160,16 @@ procedure DrawFigure(var fig: TFigure; var field: TField);
 var
     i, j: byte;
 begin
-    for i := 1 to FIGURE_WIDTH do
+    for i := 1 to FIGURE_HEIGHT do
     begin
-        for j := 1 to FIGURE_HEIGHT do
+        for j := 1 to FIGURE_WIDTH do
         begin
-            if field[fig.x+i][fig.y+j] = 0 then
-                field[fig.x+i][fig.y+j] := fig.body[i][j]
+            {if field[fig.y+i-2][fig.x+j] = 0 then}
+                field[fig.y+i-2][fig.x+j] := fig.body[i][j]
+            {
             else
                 exit
+            }
         end
     end
 end;
@@ -111,25 +178,47 @@ var
     field: TField;
     curFigure, fig2: TFigure;
     i: integer;
+    xMove, yMove: integer;
+    keyCode: integer;
 begin
     clrscr;
     randomize;
 
+    curFigure.x := 1;
+    curFigure.y := 1;
+    curFigure.ftype := random(FIGURE_COUNT)+1;
+
     InitFigure(curFigure);
 
+    yMove := 1;
     i := 1;
-    while i < 10 do
+    while true do
     begin
         clrscr;
         GotoXY(1, 1);
-        curFigure.x := random(FIELD_WIDTH)+1;
-        curFigure.y := random(FIELD_HEIGHT)+1;
+
+        if KeyPressed then
+        begin
+            GetKey(keyCode);
+            case keyCode of 
+                -80: { down }
+                begin
+                    curFigure.y := curFigure.y+1;
+                end;
+                27: 
+                begin
+                    GotoXY(1, 1);
+                    clrscr;
+                    halt(1)
+                end
+            end
+        end;
 
         DrawFigure(curFigure, field);
         DrawField(field);
 
         i := i + 1;
-        delay(250)
+        delay(500)
     end
 
 end.
