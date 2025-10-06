@@ -212,7 +212,7 @@ begin
     currentFig := tmpFig
 end;
 
-function CanPlace(x, y: integer): boolean;
+function CanPlace(x, y: byte): boolean;
 var
     i, j: byte;
 begin
