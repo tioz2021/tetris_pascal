@@ -107,22 +107,23 @@ var
 
 procedure DrawInfo;
 begin
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y);
-  write('TETRIS');
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 2);
-  write('Score: ', score);
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
-  write('Level: ', level);
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 5);
-  write('Управление:');
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 6);
-  write('LeftArrow/RightArrow - влево/вправо');
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 7);
-  write('UpArrow - поворот');
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 8);
-  write('DownArrow - быстрее');
-  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
-  write('ESC - выход');
+    TextColor(Yellow);
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y);
+    write('TETRIS');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 2);
+    write('Score: ', score);
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
+    write('Level: ', level);
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 5);
+    write('Управление:');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 6);
+    write('LeftArrow/RightArrow - влево/вправо');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 7);
+    write('UpArrow - поворот');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 8);
+    write('DownArrow - быстрее');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
+    write('ESC - выход');
 end;
 
 procedure InitField;
@@ -165,7 +166,8 @@ begin
             GotoXY(FIELD_OFFSET_X+j-1, FIELD_OFFSET_Y+i-1);
             if field[i, j] > 0 then
             begin
-                write('#');
+                TextColor(field[i, j]);
+                write('#')
             end
             else
                 write(' ')
@@ -228,7 +230,6 @@ begin
         end
     end
 end;
-
 procedure PlaceFigure;
 var
     i, j: integer;
@@ -247,13 +248,14 @@ procedure DrawCurrentFigure;
 var
     i, j: integer;
 begin
+    TextColor(figType);
     for i := 1 to FIGURE_HEIGHT do
     begin
         for j := 1 to FIGURE_WIDTH do
         begin
             if currentFig[i, j] > 0 then
             begin
-                GotoXY(FIELD_OFFSET_X+figX+j-2, FIELD_OFFSET_Y+figY+i-2);
+                GotoXY(FIELD_OFFSET_X+figX+j-2, FIELD_OFFSET_Y+figY+i-3);
                 write('#')
             end
         end
@@ -314,22 +316,22 @@ procedure NewFigure;
 begin
     figType := random(7) + 1;
     LoadFigure(figType);
-    figX := FIELD_WIDTH div 2;
+    figX := FIELD_WIDTH div 2 - 1;
     figY := 1;
 
-    {
     if not CanPlace(figX, figY) then
         gameOver := true
-    }
 end;
 
 var
     lastMove: QWord;
     moveDelay: integer;
     keyCode: integer;
+    saveTextAttr: integer;
 begin
     randomize;
     clrscr;
+    saveTextAttr := TextAttr;
 
     InitField;
     score := 0;
@@ -404,5 +406,14 @@ begin
         delay(30)
     end;
 
-    CursorOn
+    clrscr;
+    GotoXY(1, 1);
+    TextColor(RED);
+    write('Score: ', score);
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
+    TextAttr := SaveTextAttr;
+    GotoXY(1, 3);
+    Write('Please Type Enter for close game');
+    readln;
+    clrscr
 end.
