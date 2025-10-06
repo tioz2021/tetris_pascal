@@ -1,19 +1,19 @@
 program Tetris;
 
-uses crt, get_key;
+uses crt, SysUtils, get_key;
 
 const
     FIELD_WIDTH = 20;
     FIELD_HEIGHT = 30;
-    FIELD_OFFSET_TOP = 2;
-    FIELD_OFFSET_LEFT = 5;
+    FIELD_OFFSET_Y = 2;
+    FIELD_OFFSET_X = 5;
     FIGURE_COUNT = 7;
     FIGURE_WIDTH = 8;
     FIGURE_HEIGHT = 8;
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
-    ] of byte = (
+    ] of integer = (
         { I/ftype = 1 }
         (
             { row 1/2 }
@@ -94,179 +94,315 @@ const
     );
 
 type
-    TField = array [1..FIELD_HEIGHT, 1..FIELD_HEIGHT] of byte;
-    TFigureBody = array [1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of byte;
-    TPoint = record
-        x, y: byte;
-    end;
-    TFigure = record
-        size: TPoint;
-        body: TFigureBody;
-        fpos: TPoint;
-        ftype: byte;
-        rotate: byte;
-        cantPlace: boolean;
-    end;
+    TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of integer;
+    TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of integer;
 
-procedure InitField(var field: TField);
-var
-    i, j: byte;
-begin
-    for i := 1 to FIELD_HEIGHT do
-    begin
-        for j := 1 to FIELD_WIDTH do
-        begin
-            field[i][j] := 0
-        end
-    end
-end;
-
-procedure DrawField(var field: TField);
-var
-    i, j: byte;
-begin
-    for i := 1 to FIELD_HEIGHT do
-    begin
-        for j := 1 to FIELD_WIDTH do
-        begin
-            if field[i][j] > 0 then
-            begin
-                write('#')
-            end
-            else
-                write('0')
-            { delay(10) }
-        end;
-        writeln
-    end
-end;
-
-procedure LoadFigure(var fig: TFigure);
-var
-    i, j: byte;
-begin
-    for i := 1 to fig.size.y do
-    begin
-        for j := 1 to fig.size.x do 
-        begin
-            fig.body[i][j] := FIGURES[fig.ftype, i, j]
-        end
-    end
-end;
-
-procedure
-CantPlaceFigure(var fig: TFigure; var field: TField; x, y: byte);
-var
-    i, j: byte;
-begin
-    fig.cantPlace := true;
-
-    for i := 1 to fig.size.y do
-    begin
-        for j := 1 to fig.size.x do
-        begin
-            {
-            if (y+i-1 > FIELD_HEIGHT) or (x+j-1 < 1) or
-                (x+j-1 > FIELD_WIDTH) or (y+i-1 < 1) then
-            begin
-                fig.cantPlace := false;
-                exit
-            end;
-            }
-
-            GotoXY(35, 1);
-            write('y: ', y+i+1, ' | ', 'x: ', x+j-1, ' | ', fig.cantPlace);
-            GotoXY(1, 1);
-            if field[y+i+1, x+j-1] > 0 then
-            begin
-                fig.cantPlace := false;
-                exit
-            end
-        end
-    end
-end;
-
-procedure DrawFigure(var fig: TFigure; var field: TField);
-var
-    i, j: byte;
-begin
-    for i := 1 to fig.size.y do
-    begin
-        for j := 1 to fig.size.x do
-        begin
-            if fig.cantPlace then
-            begin
-                if (i = 1) or (fig.body[i][j] > 0) then
-                    field[fig.fpos.y+i-2][fig.fpos.x+j-1] := fig.body[i][j];
-            end
-        end
-    end
-end;
-
+{ #global var}
 var
     field: TField;
-    curFigure, fig2: TFigure;
-    xMove, yMove: byte;
+    currentFig, nextFig: TFigure;
+    figX, figY, figType, figRot: integer;
+    score, level: integer;
+    gameOver: boolean;
+
+procedure DrawInfo;
+begin
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y);
+  write('TETRIS');
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 2);
+  write('Score: ', score);
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
+  write('Level: ', level);
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 5);
+  write('Управление:');
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 6);
+  write('LeftArrow/RightArrow - влево/вправо');
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 7);
+  write('UpArrow - поворот');
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 8);
+  write('DownArrow - быстрее');
+  GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
+  write('ESC - выход');
+end;
+
+procedure InitField;
+var
+    i, j: integer;
+begin
+    for i := 1 to FIELD_HEIGHT do
+    begin
+        for j := 1 to FIELD_WIDTH do
+        begin
+            field[i, j] := 0;
+        end
+    end
+end;
+
+procedure DrawBorder;
+var
+    i: integer;
+begin
+    for i := 1 to FIELD_HEIGHT do
+    begin
+        GotoXY(FIELD_OFFSET_X-1, FIELD_OFFSET_Y+i-1);
+        write('|');
+        GotoXY(FIELD_OFFSET_X+FIELD_WIDTH, FIELD_OFFSET_Y+i-1);
+        write('|');
+    end;
+    GotoXY(FIELD_OFFSET_X-1, FIELD_OFFSET_Y+FIELD_HEIGHT);
+    for i := 1 to FIELD_WIDTH+2 do
+        write('-')
+end;
+
+procedure DrawField;
+var
+    i, j: integer;
+begin
+    for i := 1 to FIELD_HEIGHT do
+    begin
+        for j := 1 to FIELD_WIDTH do
+        begin
+            GotoXY(FIELD_OFFSET_X+j-1, FIELD_OFFSET_Y+i-1);
+            if field[i, j] > 0 then
+            begin
+                write('#');
+            end
+            else
+                write(' ')
+        end
+    end
+end;
+
+procedure LoadFigure(figNum: integer);
+var
+    i, j: integer;
+begin
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            currentFig[i, j] := FIGURES[figNum, i, j]
+        end
+    end
+end;
+
+procedure RotateFigure;
+var
+    tmpFig: TFigure;
+    i, j: integer;
+begin
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            tmpFig[i, j] := currentFig[FIGURE_HEIGHT-j+1, i]
+        end
+    end;
+    currentFig := tmpFig
+end;
+
+function CanPlace(x, y: integer): boolean;
+var
+    i, j: integer;
+begin
+    CanPlace := true;
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            if currentFig[i, j] > 0 then
+            begin
+                if (x+i-1 > FIELD_HEIGHT) or (x+j-1 < 1) or
+                    (x+j-1 > FIELD_WIDTH) or (y+i-1 < 1) then
+                begin
+                    CanPlace := false;
+                    exit
+                end;
+
+                if field[y+i-1, x+j-1] > 0 then
+                begin
+                    CanPlace := false;
+                    exit
+                end
+            end
+        end
+    end
+end;
+
+procedure PlaceFigure;
+var
+    i, j: integer;
+begin
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            if currentFig[i, j] > 0 then
+                field[figY+i-1, figX+j-1] := figType
+        end
+    end
+end;
+
+procedure DrawCurrentFigure;
+var
+    i, j: integer;
+begin
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            if currentFig[i, j] > 0 then
+            begin
+                GotoXY(FIELD_OFFSET_X+figX+j-2, FIELD_OFFSET_Y+figY+i-2);
+                write('#')
+            end
+        end
+    end
+end;
+
+procedure CheckLines;
+var
+    i, j, k: integer;
+    full: boolean;
+    linesCleared: integer;
+begin
+    linesCleared := 0;
+    i := FIELD_HEIGHT;
+
+    while i >= 1 do
+    begin
+        full := true;
+        for j := 1 to FIELD_WIDTH do
+        begin
+            if field[i, j] = 0 then
+            begin
+                full := false;
+                break
+            end
+        end;
+    
+        if full then
+        begin
+            linesCleared := linesCleared+1;
+            for k := i downto 4 do
+            begin
+                for j := 1 to FIELD_WIDTH do
+                begin
+                    field[k, j] := field[k-1, j]
+                end;
+                for j := 1 to FIELD_WIDTH do
+                begin
+                    field[1, j] := 0
+                end;
+            end
+        end
+        else
+            i := i-1
+    end;
+
+    if linesCleared > 0 then
+    begin
+        score := score + linesCleared * 100 * level;
+        if score div 1000 > level-1 then
+        begin
+            level := level+1;
+        end
+    end
+end;
+
+procedure NewFigure;
+begin
+    figType := random(7) + 1;
+    LoadFigure(figType);
+    figX := FIELD_WIDTH div 2;
+    figY := 1;
+
+    {
+    if not CanPlace(figX, figY) then
+        gameOver := true
+    }
+end;
+
+var
+    lastMove: QWord;
+    moveDelay: integer;
     keyCode: integer;
 begin
-    clrscr;
     randomize;
-    {curFigure.ftype := random(FIGURE_COUNT)+1;}
+    clrscr;
 
-    curFigure.fpos.x := 1;
-    curFigure.fpos.y := 1;
-    curFigure.size.x := 8;
-    curFigure.size.y := 5;
-    curFigure.ftype := 4;
-    curFigure.cantPlace := true;
-    LoadFigure(curFigure);
-    
-    {
-    fig2.x := 1;
-    fig2.y := 10;
-    fig2.ftype := 1;
-    fig2.size.x := 8;
-    fig2.size.y := 2;
-    LoadFigure(fig2);
-    CantPlaceFigure(fig2, field, fig2.x, fig2.y);
-    DrawFigure(fig2, field);
-    }
+    InitField;
+    score := 0;
+    level := 1;
+    gameOver := false;
 
-    yMove := 1;
-    while true do
+    DrawBorder;
+
+    NewFigure;
+    lastMove := GetTickCount64;
+
+    while not gameOver do
     begin
-        clrscr;
-        GotoXY(1, 1);
+        moveDelay := 500 - (level - 1) * 50;
+        if moveDelay < 100 then
+            moveDelay := 100;
 
         if KeyPressed then
         begin
             GetKey(keyCode);
-            case keyCode of 
-                -80: { down }
+            {ch := UpCase(ReadKey);}
+            case keyCode of
+                -75: { left }
                 begin
-                    GotoXY(40, 2);
-                    write('cp: ', curFigure.cantPlace);
-                    GotoXY(1, 1);
-                    readln;
-                    if curFigure.cantPlace then
+                    if CanPlace(figX-1, figY) then
+                        figX := figX-1;
+                end;
+                -77: { right }
+                begin
+                    if CanPlace(figX+1, figY) then
+                        figX := figX+1;
+                end;
+                -72: { up }
+                begin
+                    RotateFigure;
+                    if not CanPlace(figX, figY)then
                     begin
-                        curFigure.fpos.y := curFigure.fpos.y+1;
+                        RotateFigure;
+                        RotateFigure;
+                        RotateFigure
                     end
                 end;
-                27: 
+                -80: { down }
                 begin
-                    GotoXY(1, 1);
-                    clrscr;
-                    halt(1)
+                    moveDelay := 50
+                end;
+                27: { esc }
+                begin
+                    gameOver := true
                 end
-            end
+            end;
         end;
 
-        CantPlaceFigure(curFigure, field, curFigure.fpos.x, curFigure.fpos.y);
-        DrawFigure(curFigure, field);
+        if (GetTickCount64 - lastMove > moveDelay) then
+        begin
+            if CanPlace(figX, figY+1) then
+                figY := figY+1
+            else
+            begin
+                PlaceFigure;
+                CheckLines;
+                NewFigure
+            end;
+                
+            lastMove := GetTickCount64;
+        end;
 
-        DrawField(field);
-        delay(30);
-    end
+        DrawField;
+        DrawCurrentFigure;
+        DrawInfo;
 
+        delay(30)
+    end;
+
+    CursorOn
 end.
