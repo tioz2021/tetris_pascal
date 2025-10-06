@@ -14,7 +14,7 @@ const
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
     ] of byte = (
-        { I }
+        { I/ftype = 1 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 1, 1, 1, 1, 1, 1),
@@ -25,7 +25,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { O }
+        { O/ftype = 2 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
@@ -36,7 +36,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { T }
+        { T/ftype = 3 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 0, 0, 0, 0),
@@ -47,7 +47,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { S }
+        { S/ftype = 4 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 1, 1, 1, 1, 0, 0),
@@ -58,7 +58,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { Z }
+        { Z/ftype = 5 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 1, 1, 0, 0, 0, 0),
@@ -69,7 +69,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { J }
+        { J/ftype = 6 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (1, 1, 0, 0, 0, 0, 0, 0),
@@ -80,7 +80,7 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         ),
-        { L }
+        { L/ftype = 7 }
         (
             { row 1/2 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 1, 1, 0, 0),
@@ -91,24 +91,22 @@ const
             { row 7/8 }
             (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0)
         )
-        {((0,0,0,0), (0,0,1,0), (1,1,1,0), (0,0,0,0))}
     );
 
 type
     TField = array [1..FIELD_HEIGHT, 1..FIELD_HEIGHT] of byte;
     TFigureBody = array [1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of byte;
-    TFigure = record
-        body: TFigureBody;
-        x, y: integer;
-        ftype: byte;
-        rotate: integer;
+    TPoint = record
+        x, y: byte;
     end;
-
-{ #global var }
-var
-    score, level: integer;
-    gameOver: boolean;
-    ch: char;
+    TFigure = record
+        size: TPoint;
+        body: TFigureBody;
+        fpos: TPoint;
+        ftype: byte;
+        rotate: byte;
+        cantPlace: boolean;
+    end;
 
 procedure InitField(var field: TField);
 var
@@ -137,21 +135,53 @@ begin
             end
             else
                 write('0')
+            { delay(10) }
         end;
         writeln
     end
 end;
 
-procedure InitFigure(var fig: TFigure);
+procedure LoadFigure(var fig: TFigure);
 var
     i, j: byte;
 begin
-    for i := 1 to FIGURE_HEIGHT do
+    for i := 1 to fig.size.y do
     begin
-        for j := 1 to FIGURE_WIDTH do 
+        for j := 1 to fig.size.x do 
         begin
             fig.body[i][j] := FIGURES[fig.ftype, i, j]
-            {fig.body[i][j] := FIGURES[7, i, j]}
+        end
+    end
+end;
+
+procedure
+CantPlaceFigure(var fig: TFigure; var field: TField; x, y: byte);
+var
+    i, j: byte;
+begin
+    fig.cantPlace := true;
+
+    for i := 1 to fig.size.y do
+    begin
+        for j := 1 to fig.size.x do
+        begin
+            {
+            if (y+i-1 > FIELD_HEIGHT) or (x+j-1 < 1) or
+                (x+j-1 > FIELD_WIDTH) or (y+i-1 < 1) then
+            begin
+                fig.cantPlace := false;
+                exit
+            end;
+            }
+
+            GotoXY(35, 1);
+            write('y: ', y+i+1, ' | ', 'x: ', x+j-1, ' | ', fig.cantPlace);
+            GotoXY(1, 1);
+            if field[y+i+1, x+j-1] > 0 then
+            begin
+                fig.cantPlace := false;
+                exit
+            end
         end
     end
 end;
@@ -160,16 +190,15 @@ procedure DrawFigure(var fig: TFigure; var field: TField);
 var
     i, j: byte;
 begin
-    for i := 1 to FIGURE_HEIGHT do
+    for i := 1 to fig.size.y do
     begin
-        for j := 1 to FIGURE_WIDTH do
+        for j := 1 to fig.size.x do
         begin
-            {if field[fig.y+i-2][fig.x+j] = 0 then}
-                field[fig.y+i-2][fig.x+j] := fig.body[i][j]
-            {
-            else
-                exit
-            }
+            if fig.cantPlace then
+            begin
+                if (i = 1) or (fig.body[i][j] > 0) then
+                    field[fig.fpos.y+i-2][fig.fpos.x+j-1] := fig.body[i][j];
+            end
         end
     end
 end;
@@ -177,21 +206,33 @@ end;
 var
     field: TField;
     curFigure, fig2: TFigure;
-    i: integer;
-    xMove, yMove: integer;
+    xMove, yMove: byte;
     keyCode: integer;
 begin
     clrscr;
     randomize;
+    {curFigure.ftype := random(FIGURE_COUNT)+1;}
 
-    curFigure.x := 1;
-    curFigure.y := 1;
-    curFigure.ftype := random(FIGURE_COUNT)+1;
-
-    InitFigure(curFigure);
+    curFigure.fpos.x := 1;
+    curFigure.fpos.y := 1;
+    curFigure.size.x := 8;
+    curFigure.size.y := 5;
+    curFigure.ftype := 4;
+    curFigure.cantPlace := true;
+    LoadFigure(curFigure);
+    
+    {
+    fig2.x := 1;
+    fig2.y := 10;
+    fig2.ftype := 1;
+    fig2.size.x := 8;
+    fig2.size.y := 2;
+    LoadFigure(fig2);
+    CantPlaceFigure(fig2, field, fig2.x, fig2.y);
+    DrawFigure(fig2, field);
+    }
 
     yMove := 1;
-    i := 1;
     while true do
     begin
         clrscr;
@@ -203,7 +244,14 @@ begin
             case keyCode of 
                 -80: { down }
                 begin
-                    curFigure.y := curFigure.y+1;
+                    GotoXY(40, 2);
+                    write('cp: ', curFigure.cantPlace);
+                    GotoXY(1, 1);
+                    readln;
+                    if curFigure.cantPlace then
+                    begin
+                        curFigure.fpos.y := curFigure.fpos.y+1;
+                    end
                 end;
                 27: 
                 begin
@@ -214,11 +262,11 @@ begin
             end
         end;
 
+        CantPlaceFigure(curFigure, field, curFigure.fpos.x, curFigure.fpos.y);
         DrawFigure(curFigure, field);
-        DrawField(field);
 
-        i := i + 1;
-        delay(500)
+        DrawField(field);
+        delay(30);
     end
 
 end.
