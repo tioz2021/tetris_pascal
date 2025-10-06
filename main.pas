@@ -145,13 +145,13 @@ var
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
-        GotoXY(FIELD_OFFSET_X-1, FIELD_OFFSET_Y+i-1);
+        GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y + i - 1);
         write('|');
-        GotoXY(FIELD_OFFSET_X+FIELD_WIDTH, FIELD_OFFSET_Y+i-1);
+        GotoXY(FIELD_OFFSET_X+FIELD_WIDTH, FIELD_OFFSET_Y + i - 1);
         write('|');
     end;
-    GotoXY(FIELD_OFFSET_X-1, FIELD_OFFSET_Y+FIELD_HEIGHT);
-    for i := 1 to FIELD_WIDTH+2 do
+    GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y+FIELD_HEIGHT);
+    for i := 1 to FIELD_WIDTH + 2 do
         write('-')
 end;
 
@@ -163,7 +163,7 @@ begin
     begin
         for j := 1 to FIELD_WIDTH do
         begin
-            GotoXY(FIELD_OFFSET_X+j-1, FIELD_OFFSET_Y+i-1);
+            GotoXY(FIELD_OFFSET_X + j - 1, FIELD_OFFSET_Y + i - 1);
             if field[i, j] > 0 then
             begin
                 TextColor(field[i, j]);
@@ -197,7 +197,7 @@ begin
     begin
         for j := 1 to FIGURE_WIDTH do
         begin
-            tmpFig[i, j] := currentFig[FIGURE_HEIGHT-j+1, i]
+            tmpFig[i, j] := currentFig[FIGURE_HEIGHT - j + 1, i]
         end
     end;
     currentFig := tmpFig
@@ -214,14 +214,14 @@ begin
         begin
             if currentFig[i, j] > 0 then
             begin
-                if (x+i-1 > FIELD_HEIGHT) or (x+j-1 < 1) or
-                    (x+j-1 > FIELD_WIDTH) or (y+i-1 < 1) then
+                if (x + i - 1 > FIELD_HEIGHT) or (x + j - 1 < 1) or
+                    (x + j - 1 > FIELD_WIDTH) or (y + i - 1 < 1) then
                 begin
                     CanPlace := false;
                     exit
                 end;
 
-                if field[y+i-1, x+j-1] > 0 then
+                if field[y + i - 1, x + j - 1] > 0 then
                 begin
                     CanPlace := false;
                     exit
@@ -239,7 +239,7 @@ begin
         for j := 1 to FIGURE_WIDTH do
         begin
             if currentFig[i, j] > 0 then
-                field[figY+i-1, figX+j-1] := figType
+                field[figY + i - 1, figX + j - 1] := figType
         end
     end
 end;
@@ -255,7 +255,10 @@ begin
         begin
             if currentFig[i, j] > 0 then
             begin
-                GotoXY(FIELD_OFFSET_X+figX+j-2, FIELD_OFFSET_Y+figY+i-3);
+                GotoXY(
+                    FIELD_OFFSET_X + figX + j - 2,
+                    FIELD_OFFSET_Y + figY + i - 3
+                );
                 write('#')
             end
         end
@@ -290,7 +293,7 @@ begin
             begin
                 for j := 1 to FIELD_WIDTH do
                 begin
-                    field[k, j] := field[k-1, j]
+                    field[k, j] := field[k - 1, j]
                 end;
                 for j := 1 to FIELD_WIDTH do
                 begin
@@ -307,14 +310,14 @@ begin
         score := score + linesCleared * 100 * level;
         if score div 1000 > level-1 then
         begin
-            level := level+1;
+            level := level + 1;
         end
     end
 end;
 
 procedure NewFigure;
 begin
-    figType := random(7) + 1;
+    figType := random(FIGURE_COUNT) + 1;
     LoadFigure(figType);
     figX := FIELD_WIDTH div 2 - 1;
     figY := 1;
@@ -356,13 +359,13 @@ begin
             case keyCode of
                 -75: { left }
                 begin
-                    if CanPlace(figX-1, figY) then
-                        figX := figX-1;
+                    if CanPlace(figX - 1, figY) then
+                        figX := figX - 1;
                 end;
                 -77: { right }
                 begin
-                    if CanPlace(figX+1, figY) then
-                        figX := figX+1;
+                    if CanPlace(figX + 1, figY) then
+                        figX := figX + 1;
                 end;
                 -72: { up }
                 begin
@@ -387,8 +390,8 @@ begin
 
         if (GetTickCount64 - lastMove > moveDelay) then
         begin
-            if CanPlace(figX, figY+1) then
-                figY := figY+1
+            if CanPlace(figX, figY + 1) then
+                figY := figY + 1
             else
             begin
                 PlaceFigure;
