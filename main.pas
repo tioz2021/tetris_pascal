@@ -13,7 +13,7 @@ const
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
-    ] of integer = (
+    ] of byte = (
         { I/ftype = 1 }
         (
             { row 1/2 }
@@ -94,14 +94,14 @@ const
     );
 
 type
-    TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of integer;
-    TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of integer;
+    TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of byte;
+    TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of byte;
 
 { #global var}
 var
     field: TField;
-    currentFig, nextFig: TFigure;
-    figX, figY, figType, figRot: integer;
+    currentFig: TFigure;
+    figX, figY, figType: byte;
     score, level: integer;
     gameOver: boolean;
 
@@ -110,10 +110,19 @@ begin
     TextColor(Yellow);
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y);
     write('TETRIS');
+
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 2);
-    write('Score: ', score);
+    write('Score: ');
+    TextColor(Red);
+    write(score);
+    TextColor(Yellow);
+
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
-    write('Level: ', level);
+    write('Level: ');
+    TextColor(Red);
+    write(level);
+    TextColor(Yellow);
+
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 5);
     write('Управление:');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 6);
@@ -128,7 +137,7 @@ end;
 
 procedure InitField;
 var
-    i, j: integer;
+    i, j: byte;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
@@ -141,23 +150,23 @@ end;
 
 procedure DrawBorder;
 var
-    i: integer;
+    i: byte;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
         GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y + i - 1);
         write('|');
-        GotoXY(FIELD_OFFSET_X+FIELD_WIDTH, FIELD_OFFSET_Y + i - 1);
+        GotoXY(FIELD_OFFSET_X + FIELD_WIDTH, FIELD_OFFSET_Y + i - 1);
         write('|');
     end;
-    GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y+FIELD_HEIGHT);
+    GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y + FIELD_HEIGHT);
     for i := 1 to FIELD_WIDTH + 2 do
         write('-')
 end;
 
 procedure DrawField;
 var
-    i, j: integer;
+    i, j: byte;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
@@ -175,9 +184,9 @@ begin
     end
 end;
 
-procedure LoadFigure(figNum: integer);
+procedure LoadFigure(figNum: byte);
 var
-    i, j: integer;
+    i, j: byte;
 begin
     for i := 1 to FIGURE_HEIGHT do
     begin
@@ -191,7 +200,7 @@ end;
 procedure RotateFigure;
 var
     tmpFig: TFigure;
-    i, j: integer;
+    i, j: byte;
 begin
     for i := 1 to FIGURE_HEIGHT do
     begin
@@ -205,7 +214,7 @@ end;
 
 function CanPlace(x, y: integer): boolean;
 var
-    i, j: integer;
+    i, j: byte;
 begin
     CanPlace := true;
     for i := 1 to FIGURE_HEIGHT do
@@ -230,9 +239,10 @@ begin
         end
     end
 end;
+
 procedure PlaceFigure;
 var
-    i, j: integer;
+    i, j: byte;
 begin
     for i := 1 to FIGURE_HEIGHT do
     begin
@@ -246,7 +256,7 @@ end;
 
 procedure DrawCurrentFigure;
 var
-    i, j: integer;
+    i, j: byte;
 begin
     TextColor(figType);
     for i := 1 to FIGURE_HEIGHT do
@@ -267,9 +277,9 @@ end;
 
 procedure CheckLines;
 var
-    i, j, k: integer;
+    i, j, k: byte;
     full: boolean;
-    linesCleared: integer;
+    linesCleared: byte;
 begin
     linesCleared := 0;
     i := FIELD_HEIGHT;
@@ -288,8 +298,8 @@ begin
     
         if full then
         begin
-            linesCleared := linesCleared+1;
-            for k := i downto 4 do
+            linesCleared := linesCleared + 1;
+            for k := i downto (FIGURE_COUNT div 2) do
             begin
                 for j := 1 to FIELD_WIDTH do
                 begin
@@ -302,13 +312,13 @@ begin
             end
         end
         else
-            i := i-1
+            i := i - 1
     end;
 
     if linesCleared > 0 then
     begin
         score := score + linesCleared * 100 * level;
-        if score div 1000 > level-1 then
+        if score div 1000 > level - 1 then
         begin
             level := level + 1;
         end
@@ -342,7 +352,6 @@ begin
     gameOver := false;
 
     DrawBorder;
-
     NewFigure;
     lastMove := GetTickCount64;
 
@@ -355,7 +364,6 @@ begin
         if KeyPressed then
         begin
             GetKey(keyCode);
-            {ch := UpCase(ReadKey);}
             case keyCode of
                 -75: { left }
                 begin
@@ -409,6 +417,7 @@ begin
         delay(30)
     end;
 
+    { Post game info }
     clrscr;
     GotoXY(1, 1);
     TextColor(RED);
