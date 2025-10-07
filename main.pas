@@ -13,7 +13,7 @@ const
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
-    ] of byte = (
+    ] of integer = (
         { I/ftype = 1 }
         (
             { row 1/2 }
@@ -94,14 +94,14 @@ const
     );
 
 type
-    TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of byte;
-    TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of byte;
+    TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of integer;
+    TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of integer;
 
 { #global var}
 var
     field: TField;
     currentFig: TFigure;
-    figX, figY, figType: byte;
+    figX, figY, figType: integer;
     score, level: integer;
     gameOver: boolean;
 
@@ -124,20 +124,20 @@ begin
     TextColor(Yellow);
 
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 5);
-    write('Управление:');
+    write('Keys:');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 6);
-    write('LeftArrow/RightArrow - влево/вправо');
+    write('LeftArrow/RightArrow - Left/Right');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 7);
-    write('UpArrow - поворот');
+    write('UpArrow - Rotate');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 8);
-    write('DownArrow - быстрее');
+    write('DownArrow - FastMove');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
-    write('ESC - выход');
+    write('ESC - Close game');
 end;
 
 procedure InitField;
 var
-    i, j: byte;
+    i, j: integer;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
@@ -150,7 +150,7 @@ end;
 
 procedure DrawBorder;
 var
-    i: byte;
+    i: integer;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
@@ -159,14 +159,28 @@ begin
         GotoXY(FIELD_OFFSET_X + FIELD_WIDTH, FIELD_OFFSET_Y + i - 1);
         write('|');
     end;
+
     GotoXY(FIELD_OFFSET_X - 1, FIELD_OFFSET_Y + FIELD_HEIGHT);
     for i := 1 to FIELD_WIDTH + 2 do
         write('-')
 end;
 
+procedure LoadFigure(figNum: integer);
+var
+    i, j: integer;
+begin
+    for i := 1 to FIGURE_HEIGHT do
+    begin
+        for j := 1 to FIGURE_WIDTH do
+        begin
+            currentFig[i, j] := FIGURES[figNum, i, j]
+        end
+    end
+end;
+
 procedure DrawField;
 var
-    i, j: byte;
+    i, j: integer;
 begin
     for i := 1 to FIELD_HEIGHT do
     begin
@@ -184,24 +198,15 @@ begin
     end
 end;
 
-procedure LoadFigure(figNum: byte);
-var
-    i, j: byte;
-begin
-    for i := 1 to FIGURE_HEIGHT do
-    begin
-        for j := 1 to FIGURE_WIDTH do
-        begin
-            currentFig[i, j] := FIGURES[figNum, i, j]
-        end
-    end
-end;
-
 procedure RotateFigure;
 var
     tmpFig: TFigure;
-    i, j: byte;
+    i, j: integer;
 begin
+    { Don't rotate O figure }
+    if figType = 2 then
+        exit;
+
     for i := 1 to FIGURE_HEIGHT do
     begin
         for j := 1 to FIGURE_WIDTH do
@@ -212,25 +217,29 @@ begin
     currentFig := tmpFig
 end;
 
-function CanPlace(x, y: byte): boolean;
+function CanPlace(x, y: integer): boolean;
 var
-    i, j: byte;
+    i, j, fieldY, fieldX: integer;
 begin
     CanPlace := true;
+
     for i := 1 to FIGURE_HEIGHT do
     begin
         for j := 1 to FIGURE_WIDTH do
         begin
             if currentFig[i, j] > 0 then
             begin
-                if (x + i - 1 > FIELD_HEIGHT) or (x + j - 1 < 1) or
-                    (x + j - 1 > FIELD_WIDTH) or (y + i - 1 < 1) then
+                fieldY := y + i - 1;
+                fieldX := x + j - 1;
+
+                if (fieldX < 1) or (fieldX > FIELD_WIDTH) or 
+                   (fieldY < 1) or (fieldY > FIELD_HEIGHT) then
                 begin
                     CanPlace := false;
                     exit
                 end;
 
-                if field[y + i - 1, x + j - 1] > 0 then
+                if field[fieldY, fieldX] > 0 then
                 begin
                     CanPlace := false;
                     exit
@@ -242,7 +251,7 @@ end;
 
 procedure PlaceFigure;
 var
-    i, j: byte;
+    i, j: integer;
 begin
     for i := 1 to FIGURE_HEIGHT do
     begin
@@ -256,7 +265,7 @@ end;
 
 procedure DrawCurrentFigure;
 var
-    i, j: byte;
+    i, j: integer;
 begin
     TextColor(figType);
     for i := 1 to FIGURE_HEIGHT do
@@ -267,19 +276,19 @@ begin
             begin
                 GotoXY(
                     FIELD_OFFSET_X + figX + j - 2,
-                    FIELD_OFFSET_Y + figY + i - 3
+                    FIELD_OFFSET_Y + figY + i - 2
                 );
                 write('#')
             end
         end
-    end
+    end;
 end;
 
 procedure CheckLines;
 var
-    i, j, k: byte;
+    i, j, k: integer;
     full: boolean;
-    linesCleared: byte;
+    linesCleared: integer;
 begin
     linesCleared := 0;
     i := FIELD_HEIGHT;
@@ -299,7 +308,7 @@ begin
         if full then
         begin
             linesCleared := linesCleared + 1;
-            for k := i downto (FIGURE_COUNT div 2) do
+            for k := i downto FIGURE_HEIGHT div 2 do
             begin
                 for j := 1 to FIELD_WIDTH do
                 begin
@@ -308,7 +317,7 @@ begin
                 for j := 1 to FIELD_WIDTH do
                 begin
                     field[1, j] := 0
-                end;
+                end
             end
         end
         else
@@ -319,9 +328,7 @@ begin
     begin
         score := score + linesCleared * 100 * level;
         if score div 1000 > level - 1 then
-        begin
             level := level + 1;
-        end
     end
 end;
 
@@ -344,6 +351,7 @@ var
 begin
     randomize;
     clrscr;
+    CursorOff;
     saveTextAttr := TextAttr;
 
     InitField;
@@ -391,7 +399,10 @@ begin
                 end;
                 27: { esc }
                 begin
-                    gameOver := true
+                    gameOver := true;
+                    TextAttr := SaveTextAttr;
+                    clrscr;
+                    halt(1)
                 end
             end;
         end;
@@ -399,15 +410,20 @@ begin
         if (GetTickCount64 - lastMove > moveDelay) then
         begin
             if CanPlace(figX, figY + 1) then
-                figY := figY + 1
+            begin
+                figY := figY + 1;
+            end
             else
             begin
+                delay(50);
+                if CanPlace(figX, figY + 1) then
+                    continue;
+                    
                 PlaceFigure;
                 CheckLines;
-                NewFigure
+                NewFigure;
             end;
-                
-            lastMove := GetTickCount64;
+            lastMove := GetTickCount64
         end;
 
         DrawField;
@@ -420,12 +436,13 @@ begin
     { Post game info }
     clrscr;
     GotoXY(1, 1);
-    TextColor(RED);
+    TextColor(Red);
     write('Score: ', score);
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 3);
     TextAttr := SaveTextAttr;
     GotoXY(1, 3);
     Write('Please Type Enter for close game');
     readln;
+    CursorOn;
     clrscr
 end.
