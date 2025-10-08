@@ -1,4 +1,4 @@
-unit get_key;
+unit GetKeyU;
 
 interface
 procedure GetKey(var code: integer);

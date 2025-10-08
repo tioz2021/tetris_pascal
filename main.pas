@@ -1,6 +1,6 @@
 program Tetris;
 
-uses crt, SysUtils, get_key;
+uses crt, SysUtils, GetKeyU;
 
 const
     FIELD_WIDTH = 20;
@@ -10,6 +10,7 @@ const
     FIGURE_COUNT = 7;
     FIGURE_WIDTH = 8;
     FIGURE_HEIGHT = 8;
+    FILENAME_FOR_SCORE = 'data_score_ladder';
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
@@ -96,6 +97,17 @@ const
 type
     TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of integer;
     TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of integer;
+    TFile = file of integer;
+
+    TQueuePointer = ^TQueue;
+    TQueue = record
+        data: integer;
+        next: TQueuePointer;
+    end;
+
+    TQueueRecord = record
+        first, last: TQueuePointer;
+    end;
 
 { #global var}
 var
@@ -132,6 +144,8 @@ begin
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 8);
     write('DownArrow - FastMove');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
+    write('Space - Pause game');
+    GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 10);
     write('ESC - Close game');
 end;
 
@@ -343,10 +357,128 @@ begin
         gameOver := true
 end;
 
+procedure PauseGame(saveTextAttr: integer);
+begin
+    GotoXY(1, 1);
+    TextColor(Red);
+    write('Game paused, type Enter for continue play');
+    GotoXY(1, 1);
+    readln;
+    clrscr;
+    TextAttr := saveTextAttr;
+    DrawBorder
+end;
+
+procedure QInit(var q: TQueueRecord);
+begin
+    q.first := nil;
+    q.last := nil
+end;
+
+procedure QPut(var q: TQueueRecord; n: integer);
+begin
+    if q.first = nil then
+    begin
+        new(q.first);
+        q.last := q.first
+    end
+    else
+    begin
+        new(q.last^.next);
+        q.last := q.last^.next
+    end;
+    q.last^.data := n;
+    q.last^.next := nil
+end;
+
+procedure test(var f: TFile; saveTextAttr: integer);
+var
+    n, i, tmpNum: integer;
+    q, q2: TQueueRecord;
+    pp, pp2: ^TQueuePointer;
+begin
+    {$I-}
+    { open file }
+    assign(f, FILENAME_FOR_SCORE);
+    reset(f);
+    if IOResult <> 0 then
+    begin
+        rewrite(f);
+    end;
+
+    { read file and upload data to queue }
+    if score > 0 then
+    begin
+        QInit(q);
+        while not eof(f) do
+        begin
+            read(f, n);
+            QPut(q, n);
+        end;
+        close(f);
+        QPut(q, score)
+    end;
+
+    { write file and create queue }
+    rewrite(f);
+    pp := @(q.first);
+    while pp^ <> nil do
+    begin
+        write(f, pp^^.data);
+        pp := @(pp^^.next)
+    end;
+    close(f);
+
+    { sort and craete new queue }
+    QInit(q2);
+    pp := @(q.first);
+    pp2 := @(q2.first);
+    QPut(q2, 0);
+    tmpNum := 0;
+    while pp^ <> nil do
+    begin
+        tmpNum := pp^^.data;
+
+        { add unic number }
+        while pp2^ <> nil do
+        begin
+            if pp2^^.data = tmpNum then
+                break
+            else
+            begin
+                QPut(q2, tmpNum);
+                pp2 := @(pp2^^.next)
+            end
+        end;
+
+        pp := @(pp^^.next)
+    end;
+
+    { write ladder for display }
+    i := 6;
+    TextColor(Blue);
+    GotoXY(1, 5);
+    write('TOP 10 score: ');
+    pp := @(q2.first);
+    while pp^ <> nil do
+    begin
+        GotoXY(1, i);
+        TextColor(Red);
+        write(i-5, ': ');
+        TextColor(Yellow);
+        write(pp^^.data);
+        i := i + 1;
+        pp := @(pp^^.next)
+    end;
+
+    TextAttr := saveTextAttr
+end;
+
 var
     lastMove: QWord;
     moveDelay: integer;
     keyCode: integer;
+    scoreFile: TFile;
     saveTextAttr: integer;
 begin
     randomize;
@@ -397,6 +529,10 @@ begin
                 begin
                     moveDelay := 50
                 end;
+                32: { space }
+                begin
+                    PauseGame(saveTextAttr)
+                end;
                 27: { esc }
                 begin
                     gameOver := true;
@@ -442,6 +578,11 @@ begin
     TextAttr := SaveTextAttr;
     GotoXY(1, 3);
     Write('Please Type Enter for close game');
+
+    { save score }
+    score := 300;
+    test(scoreFile, saveTextAttr);
+
     readln;
     CursorOn;
     clrscr
