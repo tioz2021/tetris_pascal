@@ -19,9 +19,7 @@ begin
     assign(f, FILENAME_FOR_SCORE);
     reset(f);
     if IOResult <> 0 then
-    begin
         rewrite(f);
-    end;
 end;
 
 procedure ReadFileAndUploadDataToQueue(
@@ -153,15 +151,6 @@ var
     q, q2: TQueueRecord;
     dataFile: TFile;
 begin
-    {
-    if score = 0 then
-    begin
-        OpenFile(dataFile);
-        ReadFileAndUploadDataToQueue(score, q, dataFile);
-        exit
-    end;
-    }
-
     OpenFile(dataFile);
     ReadFileAndUploadDataToQueue(score, q, dataFile);
     CreateNewQueueForLadder(q, q2);

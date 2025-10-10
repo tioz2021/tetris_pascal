@@ -146,9 +146,7 @@ begin
     for i := 1 to FIELD_HEIGHT do
     begin
         for j := 1 to FIELD_WIDTH do
-        begin
             field[i, j] := 0;
-        end
     end
 end;
 
@@ -176,9 +174,7 @@ begin
     for i := 1 to FIGURE_HEIGHT do
     begin
         for j := 1 to FIGURE_WIDTH do
-        begin
             currentFig[i, j] := FIGURES[figNum, i, j]
-        end
     end
 end;
 
@@ -214,9 +210,7 @@ begin
     for i := 1 to FIGURE_HEIGHT do
     begin
         for j := 1 to FIGURE_WIDTH do
-        begin
             tmpFig[i, j] := currentFig[FIGURE_HEIGHT - j + 1, i]
-        end
     end;
     currentFig := tmpFig
 end;
@@ -315,13 +309,9 @@ begin
             for k := i downto FIGURE_HEIGHT div 2 do
             begin
                 for j := 1 to FIELD_WIDTH do
-                begin
-                    field[k, j] := field[k - 1, j]
-                end;
+                    field[k, j] := field[k - 1, j];
                 for j := 1 to FIELD_WIDTH do
-                begin
                     field[1, j] := 0
-                end
             end
         end
         else
@@ -430,9 +420,7 @@ begin
         if (GetTickCount64 - lastMove > moveDelay) then
         begin
             if CanPlace(figX, figY + 1) then
-            begin
-                figY := figY + 1;
-            end
+                figY := figY + 1
             else
             begin
                 delay(50);
