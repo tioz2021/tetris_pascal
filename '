@@ -461,7 +461,8 @@ begin
         begin
             tmpNum := pp^^.next^.data;
             pp^^.next^.data := pp^^.data;
-            pp^^.data := tmpNum
+            pp^^.data := tmpNum;
+
         end;
 
         GotoXY(10, 30 + i);
