@@ -136,7 +136,7 @@ begin
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 9);
     write('Space - Pause game');
     GotoXY(FIELD_OFFSET_X + FIELD_WIDTH + 5, FIELD_OFFSET_Y + 10);
-    write('ESC - Close game');
+    write('ESC - Close game')
 end;
 
 procedure InitField;
@@ -285,7 +285,7 @@ begin
                 write('#')
             end
         end
-    end;
+    end
 end;
 
 procedure CheckLines;
@@ -424,7 +424,7 @@ begin
                     clrscr;
                     halt(1)
                 end
-            end;
+            end
         end;
 
         if (GetTickCount64 - lastMove > moveDelay) then
