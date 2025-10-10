@@ -17,10 +17,7 @@ begin
         code := -ord(c)
     end
     else
-    begin
         code := ord(c)
-    end
-
 end;
 
 end.
