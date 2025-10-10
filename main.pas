@@ -463,8 +463,8 @@ begin
     GotoXY(1, 3);
     Write('Please type Enter for close game');
 
-    {score := 1000;}
-    ScoresLadder(score);
+    {score := 200;}
+    ScoresLadder(score, 1, 6);
 
     readln;
     CursorOn;

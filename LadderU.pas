@@ -2,7 +2,7 @@ unit LadderU;
 
 interface
 
-procedure ScoresLadder(var score: integer);
+procedure ScoresLadder(var score: integer; posX, posY: integer);
 
 implementation
 uses crt, QueueU;
@@ -15,6 +15,7 @@ type
 
 procedure OpenFile(var f: TFile);
 begin
+    {$I-}
     assign(f, FILENAME_FOR_SCORE);
     reset(f);
     if IOResult <> 0 then
@@ -31,17 +32,14 @@ procedure ReadFileAndUploadDataToQueue(
 var
     n: integer;
 begin
-    if score > 0 then
+    QInit(q);
+    while not eof(f) do
     begin
-        QInit(q);
-        while not eof(f) do
-        begin
-            read(f, n);
-            QPut(q, n);
-        end;
-        close(f);
-        QPut(q, score)
-    end
+        read(f, n);
+        QPut(q, n)
+    end;
+    close(f);
+    QPut(q, score)
 end;
 
 procedure CreateNewQueueForLadder(var q, q2: TQueueRecord);
@@ -108,27 +106,27 @@ begin
     end;
 end;
 
-procedure WriteLadderForDisplay(var q: TQueueRecord);
+procedure WriteLadderForDisplay(var q: TQueueRecord; posX, posY: integer);
 var
     i: integer;
     pp: ^TQueuePointer;
 begin
-    i := 6;
+    i := posY+1;
     TextColor(Blue);
-    GotoXY(1, 5);
+    GotoXY(1, posY);
     write('TOP 10 score: ');
     pp := @(q.first);
     while pp^ <> nil do
     begin
-        if pp^^.data < 1 then
-            pp := @(pp^^.next);
-
-        GotoXY(1, i);
-        TextColor(Red);
-        write(i-5, ': ');
-        TextColor(Yellow);
-        write(pp^^.data);
-        i := i + 1;
+        if pp^^.data > 1 then
+        begin
+            GotoXY(PosX, i);
+            TextColor(Red);
+            write(i-PosY, ': ');
+            TextColor(Yellow);
+            write(pp^^.data);
+            i := i + 1
+        end;
         pp := @(pp^^.next)
     end
 end;
@@ -147,21 +145,28 @@ begin
         write(f, pp^^.data);
         pp := @(pp^^.next)
     end;
-    close(f);
+    close(f)
 end;
 
-procedure ScoresLadder(var score: integer);
+procedure ScoresLadder(var score: integer; posX, posY: integer);
 var
     q, q2: TQueueRecord;
     dataFile: TFile;
 begin
-    {$I-}
+    {
+    if score = 0 then
+    begin
+        OpenFile(dataFile);
+        ReadFileAndUploadDataToQueue(score, q, dataFile);
+        exit
+    end;
+    }
 
     OpenFile(dataFile);
     ReadFileAndUploadDataToQueue(score, q, dataFile);
     CreateNewQueueForLadder(q, q2);
     SortNumbers(q2);
-    WriteLadderForDisplay(q2);
+    WriteLadderForDisplay(q2, posX, posY);
     WriteDataOnFile(q2, dataFile)
 end;
 
