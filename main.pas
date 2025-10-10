@@ -1,6 +1,8 @@
 program Tetris;
 
-uses crt, SysUtils, GetKeyU;
+uses crt, SysUtils,
+    { my unit }
+    GetKeyU, QueueU, LadderU;
 
 const
     FIELD_WIDTH = 20;
@@ -10,7 +12,6 @@ const
     FIGURE_COUNT = 7;
     FIGURE_WIDTH = 8;
     FIGURE_HEIGHT = 8;
-    FILENAME_FOR_SCORE = 'data_score_ladder';
 
     FIGURES: array [
         1..FIGURE_COUNT, 1..FIGURE_HEIGHT, 1..FIGURE_WIDTH
@@ -97,17 +98,6 @@ const
 type
     TField = array[1..FIELD_HEIGHT, 1..FIELD_WIDTH] of integer;
     TFigure = array[1..FIGURE_HEIGHT, 1..FIGURE_WIDTH] of integer;
-    TFile = file of integer;
-
-    TQueuePointer = ^TQueue;
-    TQueue = record
-        data: integer;
-        next: TQueuePointer;
-    end;
-
-    TQueueRecord = record
-        first, last: TQueuePointer;
-    end;
 
 { #global var}
 var
@@ -369,150 +359,10 @@ begin
     DrawBorder
 end;
 
-procedure QInit(var q: TQueueRecord);
-begin
-    q.first := nil;
-    q.last := nil
-end;
-
-procedure QPut(var q: TQueueRecord; n: integer);
-begin
-    if q.first = nil then
-    begin
-        new(q.first);
-        q.last := q.first
-    end
-    else
-    begin
-        new(q.last^.next);
-        q.last := q.last^.next
-    end;
-    q.last^.data := n;
-    q.last^.next := nil
-end;
-
-procedure test(var f: TFile; saveTextAttr: integer);
-var
-    n, i, tmpNum: integer;
-    q, q2: TQueueRecord;
-    pp, pp2: ^TQueuePointer;
-    q2HaveThisNum: boolean;
-begin
-    {$I-}
-    { open file }
-    assign(f, FILENAME_FOR_SCORE);
-    reset(f);
-    if IOResult <> 0 then
-    begin
-        rewrite(f);
-    end;
-
-    { read file and upload data to queue }
-    if score > 0 then
-    begin
-        QInit(q);
-        while not eof(f) do
-        begin
-            read(f, n);
-            QPut(q, n);
-        end;
-        close(f);
-        QPut(q, score)
-    end;
-
-    { craete new queue }
-    tmpNum := 0;
-    QInit(q2);
-    QPut(q2, tmpNum);
-    pp := @(q.first);
-    pp2 := @(q2.first);
-    while pp^ <> nil do
-    begin
-        tmpNum := pp^^.data;
-
-        { check/add unic number } 
-        while pp2^ <> nil do
-        begin
-            if tmpNum = pp2^^.data then
-            begin
-                q2HaveThisNum := true;
-                break
-            end
-            else
-            begin
-                q2HaveThisNum  := false;
-                pp2 := @(pp2^^.next)
-            end
-        end;
-        if not q2HaveThisNum then
-            QPut(q2, tmpNum);
-        pp2 := @(q2.first);
-
-        pp := @(pp^^.next)
-    end;
-
-    { sort numbers }
-    pp := @(q2.first);
-    i := 0;
-    while pp^ <> nil do
-    begin
-        tmpNum := pp^^.data;
-        if (pp^^.next <> nil) and (pp^^.data > pp^^.next^.data) then
-        begin
-            tmpNum := pp^^.next^.data;
-            pp^^.next^.data := pp^^.data;
-            pp^^.data := tmpNum
-        end;
-
-        GotoXY(10, 30 + i);
-        writeln(tmpNum);
-        readln;
-
-        i := i + 1;
-        pp := @(pp^^.next)
-    end;
-
-    { write ladder for display }
-    i := 6;
-    TextColor(Blue);
-    GotoXY(1, 5);
-    write('TOP 10 score: ');
-    pp := @(q2.first);
-    while pp^ <> nil do
-    begin
-        if pp^^.data < 1 then
-            pp := @(pp^^.next);
-
-        GotoXY(1, i);
-        TextColor(Red);
-        write(i-5, ': ');
-        TextColor(Yellow);
-        write(pp^^.data);
-        i := i + 1;
-        pp := @(pp^^.next)
-    end;
-
-    { write data file }
-    rewrite(f);
-    pp := @(q2.first);
-    while pp^ <> nil do
-    begin
-        if pp^^.data < 1 then
-            pp := @(pp^^.next);
-
-        write(f, pp^^.data);
-        pp := @(pp^^.next)
-    end;
-    close(f);
-
-    TextAttr := saveTextAttr
-end;
-
 var
     lastMove: QWord;
     moveDelay: integer;
     keyCode: integer;
-    scoreFile: TFile;
     saveTextAttr: integer;
 begin
     randomize;
@@ -613,11 +463,11 @@ begin
     GotoXY(1, 3);
     Write('Please type Enter for close game');
 
-    { save score }
-    score := 100;
-    test(scoreFile, saveTextAttr);
+    {score := 1000;}
+    ScoresLadder(score);
 
     readln;
     CursorOn;
+    TextAttr := saveTextAttr;
     clrscr
 end.
