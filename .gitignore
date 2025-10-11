@@ -1,0 +1,7 @@
+# Файлы компиляции Free Pascal
+*.ppu
+*.o
+*.or
+*.a
+*.s
+*.rst
