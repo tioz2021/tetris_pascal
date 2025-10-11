@@ -10,6 +10,7 @@ uses crt, mDataTypesU;
 const
     FILENAME_FOR_SCORE = 'data_score_ladder';
     MAX_RESULTS_FOR_LADDER = 10;
+    MIN_VALID_SCORE = 1;
 
 type
     TFile = file of integer;
@@ -41,57 +42,45 @@ begin
     QPut(q, score)
 end;
 
-procedure
-CreateNewQueueForLadder(var q: TQueueRecord; var stack: TStackPointer);
+procedure AddUniqueToStack(var q: TQueueRecord; var stack: TStackPointer);
 var
-    tmpNum: integer;
-    pp: ^TQueuePointer;
-    pp2: ^TStackPointer;
-    stackHaveThisNum: boolean;
+    current: TQueuePointer;
+    exists: boolean;
+    stackPtr: TStackPointer;
 begin
-    { craete new queue }
-    tmpNum := 0;
     SInit(stack);
-    SPush(stack, tmpNum);
-    pp := @(q.first);
-    pp2 := @(stack);
-    while pp^ <> nil do
+    current := q.first;
+    
+    while current <> nil do
     begin
-        tmpNum := pp^^.data;
-
-        { check/add unic number } 
-        while pp2^ <> nil do
+        exists := false;
+        stackPtr := stack;
+        while stackPtr <> nil do
         begin
-            if tmpNum = pp2^^.data then
+            if stackPtr^.data = current^.data then
             begin
-                stackHaveThisNum := true;
-                break
-            end
-            else
-            begin
-                stackHaveThisNum  := false;
-                pp2 := @(pp2^^.next)
-            end
+                exists := true;
+                break;
+            end;
+            stackPtr := stackPtr^.next;
         end;
-        if not stackHaveThisNum then
-            SPush(stack, tmpNum);
-        pp2 := @(stack);
-
-        pp := @(pp^^.next)
-    end
+        
+        if not exists and (current^.data > MIN_VALID_SCORE) then
+            SPush(stack, current^.data);
+            
+        current := current^.next;
+    end;
 end;
 
-procedure SortNumbers(var stack: TStackPointer);
+procedure SortStackData(var stack: TStackPointer);
 var
-    i, tmpNum: integer;
+    tmpNum: integer;
     pp: ^TStackPointer;
     swapped: boolean;
 begin
-    i := 0;
     repeat
         swapped := false;
         pp := @(stack);
-
         while (pp^ <> nil) and (pp^^.next <> nil) do
         begin
             if pp^^.data < pp^^.next^.data then
@@ -101,11 +90,8 @@ begin
                 pp^^.next^.data := tmpNum;
                 swapped := true
             end;
-
-            i := i + 1;
             pp := @(pp^^.next)
         end
-
     until not swapped
 end;
 
@@ -123,7 +109,8 @@ begin
     pp := @(stack);
     while pp^ <> nil do
     begin
-        if (pp^^.data > 1) and (topCounter <= MAX_RESULTS_FOR_LADDER) then
+        if (pp^^.data > MIN_VALID_SCORE) 
+            and (topCounter <= MAX_RESULTS_FOR_LADDER) then
         begin
             GotoXY(PosX, i);
             TextColor(Red);
@@ -145,9 +132,10 @@ begin
     rewrite(f);
     pp := @(stack);
     topCounter := 1;
-    while (pp^^.next <> nil) and (topCounter <= MAX_RESULTS_FOR_LADDER) do
+    while (pp^ <> nil) and
+        (pp^^.next <> nil) and (topCounter <= MAX_RESULTS_FOR_LADDER) do
     begin
-        if pp^^.data < 1 then
+        if pp^^.data < MIN_VALID_SCORE then
             pp := @(pp^^.next);
 
         write(f, pp^^.data);
@@ -165,10 +153,16 @@ var
 begin
     OpenFile(dataFile);
     ReadFileAndUploadDataToQueue(score, queue, dataFile);
-    CreateNewQueueForLadder(queue, stack);
-    SortNumbers(stack);
+    AddUniqueToStack(queue, stack);
+    SortStackData(stack);
     WriteLadderForDisplay(stack, posX, posY);
-    WriteDataOnFile(stack, dataFile)
+    WriteDataOnFile(stack, dataFile);
+
+    { clear }
+    QClear(queue);
+    SClear(stack);
+
+    GotoXY(1, 1)
 end;
 
 end.

@@ -22,10 +22,12 @@ type
 { Queue }
 procedure QInit(var q: TQueueRecord);
 procedure QPut(var q: TQueueRecord; n: integer);
+procedure QClear(var queue: TQueueRecord);
 
 { Stack }
 procedure SInit(var stack: TStackPointer);
 procedure SPush(var stack: TStackPointer; n: integer);
+procedure SClear(var stack: TStackPointer);
 
 implementation
 
@@ -52,6 +54,18 @@ begin
     q.last^.next := nil
 end;
 
+procedure QClear(var queue: TQueueRecord);
+var
+    tmp: TQueuePointer;
+begin
+    while queue.first <> nil do
+    begin
+        tmp := queue.first^.next;
+        dispose(queue.first);
+        queue.first := tmp
+    end
+end;
+
 { Stack }
 procedure SInit(var stack: TStackPointer);
 begin
@@ -66,6 +80,18 @@ begin
     tmp^.data := n;
     tmp^.next := stack;
     stack := tmp
+end;
+
+procedure SClear(var stack: TStackPointer);
+var
+    tmp: TStackPointer;
+begin
+    while stack <> nil do
+    begin
+        tmp := stack^.next;
+        dispose(stack);
+        stack := tmp
+    end
 end;
 
 end.
