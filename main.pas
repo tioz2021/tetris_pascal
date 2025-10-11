@@ -2,7 +2,7 @@ program Tetris;
 
 uses crt, SysUtils,
     { my unit }
-    GetKeyU, QueueU, LadderU;
+    GetKeyU, mDataTypesU, LadderU;
 
 const
     FIELD_WIDTH = 20;
@@ -451,7 +451,6 @@ begin
     GotoXY(1, 3);
     Write('Please type Enter for close game');
 
-    {score := 200;}
     ScoresLadder(score, 1, 6);
 
     readln;

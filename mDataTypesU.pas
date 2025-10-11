@@ -2,6 +2,7 @@ unit mDataTypesU;
 
 interface
 type
+    { Queue }
     TQueuePointer = ^TQueue;
     TQueue = record
         data: integer;
@@ -11,11 +12,24 @@ type
         first, last: TQueuePointer;
     end;
 
+    { Stack }
+    TStackPointer = ^TStack;
+    TStack = record
+        data: integer;
+        next: TStackPointer;
+    end;
+
+{ Queue }
 procedure QInit(var q: TQueueRecord);
 procedure QPut(var q: TQueueRecord; n: integer);
 
+{ Stack }
+procedure SInit(var stack: TStackPointer);
+procedure SPush(var stack: TStackPointer; n: integer);
+
 implementation
 
+{ Queue }
 procedure QInit(var q: TQueueRecord);
 begin
     q.first := nil;
@@ -36,6 +50,22 @@ begin
     end;
     q.last^.data := n;
     q.last^.next := nil
+end;
+
+{ Stack }
+procedure SInit(var stack: TStackPointer);
+begin
+    stack := nil
+end;
+
+procedure SPush(var stack: TStackPointer; n: integer);
+var
+    tmp: TStackPointer;
+begin
+    new(tmp);
+    tmp^.data := n;
+    tmp^.next := stack;
+    stack := tmp
 end;
 
 end.

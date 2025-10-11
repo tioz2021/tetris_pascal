@@ -5,10 +5,11 @@ interface
 procedure ScoresLadder(var score: integer; posX, posY: integer);
 
 implementation
-uses crt, QueueU;
+uses crt, mDataTypesU;
 
 const
     FILENAME_FOR_SCORE = 'data_score_ladder';
+    MAX_RESULTS_FOR_LADDER = 10;
 
 type
     TFile = file of integer;
@@ -40,18 +41,20 @@ begin
     QPut(q, score)
 end;
 
-procedure CreateNewQueueForLadder(var q, q2: TQueueRecord);
+procedure
+CreateNewQueueForLadder(var q: TQueueRecord; var stack: TStackPointer);
 var
     tmpNum: integer;
-    pp, pp2: ^TQueuePointer;
-    q2HaveThisNum: boolean;
+    pp: ^TQueuePointer;
+    pp2: ^TStackPointer;
+    stackHaveThisNum: boolean;
 begin
     { craete new queue }
     tmpNum := 0;
-    QInit(q2);
-    QPut(q2, tmpNum);
+    SInit(stack);
+    SPush(stack, tmpNum);
     pp := @(q.first);
-    pp2 := @(q2.first);
+    pp2 := @(stack);
     while pp^ <> nil do
     begin
         tmpNum := pp^^.data;
@@ -61,86 +64,94 @@ begin
         begin
             if tmpNum = pp2^^.data then
             begin
-                q2HaveThisNum := true;
+                stackHaveThisNum := true;
                 break
             end
             else
             begin
-                q2HaveThisNum  := false;
+                stackHaveThisNum  := false;
                 pp2 := @(pp2^^.next)
             end
         end;
-        if not q2HaveThisNum then
-            QPut(q2, tmpNum);
-        pp2 := @(q2.first);
+        if not stackHaveThisNum then
+            SPush(stack, tmpNum);
+        pp2 := @(stack);
 
         pp := @(pp^^.next)
     end
 end;
 
-procedure SortNumbers(var q: TQueueRecord);
+procedure SortNumbers(var stack: TStackPointer);
 var
     i, tmpNum: integer;
-    pp: ^TQueuePointer;
+    pp: ^TStackPointer;
+    swapped: boolean;
 begin
     i := 0;
-    pp := @(q.first);
-    while pp^ <> nil do
-    begin
-        tmpNum := pp^^.data;
-        if (pp^^.next <> nil) and (pp^^.data > pp^^.next^.data) then
+    repeat
+        swapped := false;
+        pp := @(stack);
+
+        while (pp^ <> nil) and (pp^^.next <> nil) do
         begin
-            tmpNum := pp^^.next^.data;
-            pp^^.next^.data := pp^^.data;
-            pp^^.data := tmpNum
-        end;
+            if pp^^.data < pp^^.next^.data then
+            begin
+                tmpNum := pp^^.data;
+                pp^^.data := pp^^.next^.data;
+                pp^^.next^.data := tmpNum;
+                swapped := true
+            end;
 
-        GotoXY(10, 30 + i);
-        writeln(tmpNum);
-        readln;
+            i := i + 1;
+            pp := @(pp^^.next)
+        end
 
-        i := i + 1;
-        pp := @(pp^^.next)
-    end;
+    until not swapped
 end;
 
-procedure WriteLadderForDisplay(var q: TQueueRecord; posX, posY: integer);
+procedure
+WriteLadderForDisplay(var stack: TStackPointer; posX, posY: integer);
 var
-    i: integer;
-    pp: ^TQueuePointer;
+    i, topCounter: integer;
+    pp: ^TStackPointer;
 begin
+    topCounter := 1;
     i := posY+1;
     TextColor(Blue);
     GotoXY(1, posY);
     write('TOP 10 score: ');
-    pp := @(q.first);
+    pp := @(stack);
     while pp^ <> nil do
     begin
-        if pp^^.data > 1 then
+        if (pp^^.data > 1) and (topCounter <= MAX_RESULTS_FOR_LADDER) then
         begin
             GotoXY(PosX, i);
             TextColor(Red);
             write(i-PosY, ': ');
             TextColor(Yellow);
             write(pp^^.data);
-            i := i + 1
+            i := i + 1;
+            topCounter := topCounter + 1
         end;
         pp := @(pp^^.next)
     end
 end;
 
-procedure WriteDataOnFile(var q: TQueueRecord; var f: TFile);
+procedure WriteDataOnFile(var stack: TStackPointer; var f: TFile);
 var
-    pp: ^TQueuePointer;
+    pp: ^TStackPointer;
+    topCounter: integer;
 begin
     rewrite(f);
-    pp := @(q.first);
-    while pp^ <> nil do
+    pp := @(stack);
+    topCounter := 1;
+    while (pp^^.next <> nil) and (topCounter <= MAX_RESULTS_FOR_LADDER) do
     begin
         if pp^^.data < 1 then
             pp := @(pp^^.next);
 
         write(f, pp^^.data);
+        topCounter := topCounter + 1;
         pp := @(pp^^.next)
     end;
     close(f)
@@ -148,15 +159,16 @@ end;
 
 procedure ScoresLadder(var score: integer; posX, posY: integer);
 var
-    q, q2: TQueueRecord;
+    queue: TQueueRecord;
+    stack: TStackPointer;
     dataFile: TFile;
 begin
     OpenFile(dataFile);
-    ReadFileAndUploadDataToQueue(score, q, dataFile);
-    CreateNewQueueForLadder(q, q2);
-    SortNumbers(q2);
-    WriteLadderForDisplay(q2, posX, posY);
-    WriteDataOnFile(q2, dataFile)
+    ReadFileAndUploadDataToQueue(score, queue, dataFile);
+    CreateNewQueueForLadder(queue, stack);
+    SortNumbers(stack);
+    WriteLadderForDisplay(stack, posX, posY);
+    WriteDataOnFile(stack, dataFile)
 end;
 
 end.
