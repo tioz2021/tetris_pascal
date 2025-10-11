@@ -60,16 +60,16 @@ begin
             if stackPtr^.data = current^.data then
             begin
                 exists := true;
-                break;
+                break
             end;
-            stackPtr := stackPtr^.next;
+            stackPtr := stackPtr^.next
         end;
         
         if not exists and (current^.data > MIN_VALID_SCORE) then
             SPush(stack, current^.data);
             
-        current := current^.next;
-    end;
+        current := current^.next
+    end
 end;
 
 procedure SortStackData(var stack: TStackPointer);
