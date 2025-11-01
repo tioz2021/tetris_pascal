@@ -104,7 +104,8 @@ var
     field: TField;
     currentFig: TFigure;
     figX, figY, figType: integer;
-    score, level: integer;
+    score: int64;
+    level: integer;
     gameOver: boolean;
 
 procedure DrawInfo;
